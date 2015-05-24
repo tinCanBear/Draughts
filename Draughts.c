@@ -26,8 +26,7 @@ void print_line(){
 }
 
 
-void print_board(char board[BOARD_SIZE][BOARD_SIZE])
-{
+void print_board(char board[BOARD_SIZE][BOARD_SIZE]) {
 	int i,j;
 	print_line();
 	for (j = BOARD_SIZE-1; j >= 0 ; j--)
