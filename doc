@@ -1,0 +1,51 @@
+
+#define WHITE_M 'm'
+#define WHITE_K 'k'
+#define BLACK_M 'M'
+#define BLACK_K 'K'
+#define EMPTY ' '
+
+#define BOARD_SIZE 10
+
+ideas_for_macros:
+  IS_WHITE(x)
+
+general deifitions:
+
+column - 0-9 (a-j)
+row - 0-9 (1-10)
+
+
+
+*minmax_tree:
+
+
+*moves
+
+
+*input
+
+*set board:
+1)
+void set_minmax_depth(int x){
+  if (x > 0 && x< 7){
+    MINIMAX_DEPTH = x;
+  } else {
+    printf("%s", WRONG_MINIMAX_DEPTH);
+  }
+  }
+2)
+void set_user_color(char *s){
+  if (str.cmp(s, "black")== 0){
+    PLAYER_WHITE = 0;
+ }
+ 
+3)
+void clear(){
+  for (int i = 0; i < BOARD_SIZE; i++){
+    for ( int j = 0; j < BOARD_SIZE; j++){
+      board[i][j] = EMPTY;
+    }
+  }
+}
+4)
