@@ -2,7 +2,7 @@
 //Define macros:
 #define IS_WHITE(x) (((x) == (WHITE_K))||((x) == (WHITE_M)))
 #define IS_KING(x) (((x) == (WHITE_K))||((x) == (BLACK_K)))
-
+"hello is it okay?"
 int MINIMAX_DEPTH = 1;
 int GAME = 0;
 int SET = 0;
