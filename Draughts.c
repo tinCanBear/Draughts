@@ -10,11 +10,6 @@ int PLAYER_TURN = 0;
 int PLAYER_WHITE = 1;
 char board[BOARD_SIZE][BOARD_SIZE];
 
-int main() {
-	test1();
-	return 0;
-}
-
 // Board init & print methods
 void print_line(){
 	int i;
@@ -144,12 +139,18 @@ int is_legal_location(location l){
   }
   return 1;	//this location is legal (black and on the board)
 }
+//tests :
 
 int test1(void){
-	char board[BOARD_SIZE][BOARD_SIZE];
-	init_board(board);
-	print_board(board);
+	char temp_board[BOARD_SIZE][BOARD_SIZE];
+	init_board(temp_board);
+	print_board(temp_board);
 	print_message(WRONG_MINIMAX_DEPTH);
 	perror_message("TEST");
 	return 1;
+}
+
+int main(){
+	test1();
+	return 0;
 }
