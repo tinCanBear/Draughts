@@ -2,7 +2,6 @@
 //Define macros:
 #define IS_WHITE(x) (((x) == (WHITE_K))||((x) == (WHITE_M)))
 #define IS_KING(x) (((x) == (WHITE_K))||((x) == (BLACK_K)))
-"hello is it okay?"
 int MINIMAX_DEPTH = 1;
 int GAME = 0;
 int SET = 0;
@@ -154,6 +153,7 @@ int test1(void){
 int main(){
 	char *input;
 	printf("%s",WELCOME_TO_DRAUGHTS)
+	// start setting part
 	printf("%s",ENTER_SETTINGS)
 	test1();
 	return 0;
