@@ -1,0 +1,12 @@
+minimax_depth 3
+user_color white
+clear
+set <b,2> white m 
+set <f,2> black m 
+set <h,4> black m 
+start
+get_moves
+move <b,2> to <a,3>
+get_moves
+move <a,3> to <b,4>
+

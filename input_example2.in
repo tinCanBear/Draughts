@@ -1,0 +1,16 @@
+clear
+start
+set <a,3> black m
+start
+set <a,2> black m
+set <h,9> black m
+set <a,5> white m
+minimax_depth 9
+start
+wrong command
+move <a,3> to <a,4>
+move <a,3> to <b,4>
+move <a,5> to <a,3>
+wrong command
+start
+quit

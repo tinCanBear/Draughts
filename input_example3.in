@@ -1,0 +1,16 @@
+clear
+minimax_depth 3
+set <c,3> white m
+set <d,4> black m
+set <d,6> black m
+set <f,6> black m
+set <g,5> white m
+set <h,8> white k
+set <g,1> white m
+set <c,1> white m
+start
+get_moves
+move <g,5> to <e,7><c,5><e,3>
+
+
+

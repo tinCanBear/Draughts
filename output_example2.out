@@ -1,0 +1,20 @@
+Welcome to Draughts!
+Enter game settings:
+Wrong board initialization
+Wrong board initialization
+Invalid position on the board
+Invalid position on the board
+Wrong value for minimax depth. The value should be between 1 to 6
+Enter your move:
+Illegal command, please try again
+Enter your move:
+Invalid position on the board
+Enter your move:
+The specified position does not contain your piece
+Enter your move:
+Illegal move
+Enter your move:
+Illegal command, please try again
+Enter your move:
+Illegal command, please try again
+Enter your move:
