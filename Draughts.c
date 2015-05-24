@@ -152,9 +152,16 @@ int test1(void){
 
 int main(){
 	char *input;
-	printf("%s",WELCOME_TO_DRAUGHTS)
+	printf("%s",WELCOME_TO_DRAUGHTS);
 	// start setting part
-	printf("%s",ENTER_SETTINGS)
+	printf("%s",ENTER_SETTINGS);
+	while(1){
+		if(GAME){
+			
+		}else{ //setting is not over
+			
+		}
+	}
 	test1();
 	return 0;
 }
