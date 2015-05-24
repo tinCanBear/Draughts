@@ -125,7 +125,7 @@ typedef struct //define a location
 typedef struct //define a disc 
 {
   location address;
-  move *next;	//{WHITE_M, WHITE_K, BLACK_M, BLACK_K}
+  move *next;	//(WHITE_M, WHITE_K, BLACK_M, BLACK_K)
 } move;
 
 
@@ -139,8 +139,9 @@ int is_legal_location(location l){
   }
   return 1;	//this location is legal (black and on the board)
 }
-//tests :
 
+
+//tests :
 int test1(void){
 	char temp_board[BOARD_SIZE][BOARD_SIZE];
 	init_board(temp_board);
@@ -151,6 +152,9 @@ int test1(void){
 }
 
 int main(){
+	char *input;
+	printf("%s",WELCOME_TO_DRAUGHTS)
+	printf("%s",ENTER_SETTINGS)
 	test1();
 	return 0;
 }
