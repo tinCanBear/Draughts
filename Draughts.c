@@ -20,16 +20,21 @@ typedef struct
 
 
 // func headers
-
-int is_legal_location(location l);
-void clear();
 void set_minmax_depth(int x);
 void set_user_color(char *s);
 void quit(void);
+void clear();
 void remove_location(location l);
+int is_legal_location(location l);
 void set_location(location l, int white, int man);
+void quit_allcation_error(void);
+void start_game(void);
+char* read_input(void);
+void parse_input_settings(char* input);
 int check_settings(void);
 location str_to_location(char* locus);
+void declare_winner(void);
+
 
 //Define macros:
 #define IS_WHITE(x) (((x) == (WHITE_K))||((x) == (WHITE_M)))
@@ -45,7 +50,7 @@ int NUM_WHITE_K = 0;
 int NUM_BLACK_M = 0;
 int NUM_BLACK_K = 0;
 
-// Board init & print methods
+// *************** Board init & print methods ****************
 void print_line(){
 	int i;
 	printf("  |");
@@ -98,7 +103,7 @@ void init_board(char board[BOARD_SIZE][BOARD_SIZE]){
 	}
 }
 
-// setters
+//  ********************** setters ***************************
 void set_minmax_depth(int x){
   if (x > 0 && x < 7){
     MINIMAX_DEPTH = x;
@@ -114,6 +119,7 @@ void set_user_color(char *s){
  }
 }
 
+// ******************* settings phase func ***********************
 
 void quit(void){
   exit(0);
@@ -184,11 +190,11 @@ void start_game(void){
 	GAME = 1;
 }
 
-/** 
- * reads the input from user by dynamically allocationg
- * memory. On the go minimizes spaces to a max of one
- * space between words. Output is the whole string submitted by the user.
- */ 
+ 
+// reads the input from user by dynamically allocationg
+// memory. On the go minimizes spaces to a max of one
+// space between words. Output is the whole string submitted by the user.
+ 
 char* read_input(void){
 	char* input;
 	int i = 0;
@@ -331,7 +337,7 @@ void declare_winner(void){
 	printf("%s player wins!\n", winner);
 }
 
-//tests :
+// *********************** tests ************************
 int test1(void){
 	char temp_board[BOARD_SIZE][BOARD_SIZE];
 	init_board(temp_board);
@@ -340,7 +346,7 @@ int test1(void){
 	perror_message("TEST 1");
 	return 1;
 }
-int test2(void){
+int test2(void){ // END THE GAME
 	GAME = 0 ;
 	SETINGS = 0;
 	return 1;
@@ -351,6 +357,7 @@ int test3(void){ //print settings
 	printf("WHITE_TURN = %d\n",WHITE_TURN);
 	return 1;
 }
+
 int main(){
 	char *input;
 	init_board(board);
