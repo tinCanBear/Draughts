@@ -18,6 +18,7 @@ typedef struct
   int score; //how good is this move 
   location step; //will be a linked list of steps within this move	
   struct move *next;	//linked list of moves
+  struct move *last;	//last move linked list of moves
 } move;
 
 
@@ -37,10 +38,10 @@ void parse_input_settings(char* input);
 int check_settings(void);
 location str_to_location(char* locus);
 void declare_winner(void);
-char* copy_board(void);
+char** copy_board(char** a_board);
 
 //??? to be implemented:
-move* get_moves(void); // all the available moves
+move* get_moves(int color, char* cpy_brd); // all the available moves
 move* get_first_move(location l); // the first move of the instrument, will call get_move...
 move* get_move(location l, char* cpy_brd); // don't need to make distinctions between men and kings (i think)
 void parse_input_game(char* input); //similar to that of the settings phase.
@@ -129,9 +130,17 @@ void init_board(char board[BOARD_SIZE][BOARD_SIZE]){
 
 /** returns char* 'new_board' which is a copy of 'board'. 
   * 'new_board' is static, thus allowing the existence of a single copy. */
-char* copy_board(void){ //return a pointer to a copy of the board 
-	static char new_board[BOARD_SIZE][BOARD_SIZE]; // only one copy exists (instead of allocating memory dynamically) 
-	memcpy(new_board, board, sizeof(new_board));
+char** copy_board(char **a_board){ //return a pointer to a copy of the board
+	char **new_board;
+	if (( new_board = malloc((BOARD_SIZE*sizeof(char*))) == NULL ){
+		quit_allcation_error();
+	}	
+	for ( int i = 0; i < BOARD_SIZE; i++ ) {
+		if ((new_board[i] = malloc(BOARD_SIZE * sizeof(char))) == NULL ){
+			quit_allcation_error();
+		}
+	}
+	memcpy(new_board, a_board, sizeof(new_board));
 	return new_board;
 }
 
@@ -452,6 +461,12 @@ int test3(void){ //print settings
 	return 1;
 }
 
+int test4(void){ //print copy of board
+	char **b;
+	b = copy_board(board);
+	print_board(b);
+	return 1;
+}
 /** the main function. */
 int main(){
 	char *input;
@@ -474,6 +489,7 @@ int main(){
 			parse_input_settings(input);
 		}
 		else if(GAME){ // game time
+			test4();
 			if ( PLAYER_WHITE && WHITE_TURN || !PLAYER_WHITE && !WHITE_TURN ){ //user's turn???maybe make different logic. 
 				printf("%s", ENTER_YOUR_MOVE);//should be here???
 				parse_input_game(input);
