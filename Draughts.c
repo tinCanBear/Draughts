@@ -15,10 +15,11 @@ typedef struct  //define a location
 
 typedef struct 
 {
-  int score; //how good is this move 
+  int eats; //how good is this move 
   location step; //will be a linked list of steps within this move	
   struct move *next;	//linked list of moves
   struct move *last;	//last move linked list of moves
+	
 } move;
 
 
@@ -38,15 +39,20 @@ void parse_input_settings(char* input);
 int check_settings(void);
 location str_to_location(char* locus);
 void declare_winner(void);
-char** copy_board(char** a_board);
+move* get_disc_moves(char* a_board, location l);
+move* get_moves(int color, char* cpy_brd); // all the available moves
+move* link_moves(move *moves, move *disc_moves);
+int same_color(char a, char b);
+void print_move(move *m);
+void print_all_move(move *m);
+int is_legal_move(move* m);// will check if move is legal
 
 //??? to be implemented:
-move* get_moves(int color, char* cpy_brd); // all the available moves
+
 move* get_first_move(location l); // the first move of the instrument, will call get_move...
 move* get_move(location l, char* cpy_brd); // don't need to make distinctions between men and kings (i think)
 void parse_input_game(char* input); //similar to that of the settings phase.
-void print_moves(move* moves); // will print the available moves for user
-int legal_move(move* m); // will check if move is legal
+ 
 //???
 
 //Define macros:
@@ -128,21 +134,7 @@ void init_board(char board[BOARD_SIZE][BOARD_SIZE]){
 	}
 }
 
-/** returns char* 'new_board' which is a copy of 'board'. 
-  * 'new_board' is static, thus allowing the existence of a single copy. */
-char** copy_board(char **a_board){ //return a pointer to a copy of the board
-	char **new_board;
-	if (( new_board = malloc((BOARD_SIZE*sizeof(char*))) == NULL ){
-		quit_allcation_error();
-	}	
-	for ( int i = 0; i < BOARD_SIZE; i++ ) {
-		if ((new_board[i] = malloc(BOARD_SIZE * sizeof(char))) == NULL ){
-			quit_allcation_error();
-		}
-	}
-	memcpy(new_board, a_board, sizeof(new_board));
-	return new_board;
-}
+
 
 //  ********************** setters ***************************
 
@@ -388,33 +380,256 @@ void declare_winner(void){
 }
 
 // ******************* game phase functions ***********************
-move* get_moves(void){
+move* get_moves(char *a_board, int is_white_turn){
 	
 	// initialize a move linked list:
-	move moves; //??? like this? 
-	move temp;
-	location l;
+	move moves = NULL; 
+	location *l;
+	if (( l = malloc(sizeof *l)) == NULL ){
+		quit_allcation_error();
+	}
 	// find out who's turn it is
-	char man = WHITE_TURN ? WHITE_M : BLACK_M;
-	char king = WHITE_TURN ? WHITE_K : BLACK_K;
-	
+	char man = is_white_turn ? WHITE_M : BLACK_M;
+	char king = is_white_turn ? WHITE_K : BLACK_K;
 
 	for ( int i = 0; i < BOARD_SIZE; i++ ){
 		for ( int j = 0; j < BOARD_SIZE; j++ ){
 			if (  board[i][j] == man || board[i][j] == king ){
+				move disc_moves;
 				l.row = i; //???maybe we want to transfer just the i,j?
 				l.column = j;
-				moves.next = get_first_move(l);
-				/*temp = get_first_move(l); //???
-				if (temp != NULL){
-					moves.next = temp // get a single move....
-				}*/
+				disc_moves = get_disc_moves(a_board, l); // get the moves for the discs in this location
+				moves = link_moves(moves,disc_moves); // concatenate the linked lists
 			}
 		}
 	}
 	return moves;
 }
-void parse_input_game(char* input){
+
+move* get_disc_moves(char* a_board, location l){
+	char disc = a_board[l.row][l.column];
+	move moves = NULL;
+	int eat; // it is possible to eat (first step)
+	if ( disc == BLACK_K || disc == WHITE_K ){
+		int k = -1;
+		int l = 1;
+		while ( l.row + k >= 0 && l.column + l <= BOARD_SIZE-1 ){ // location is inside the board (upper right)
+			if ( !(same_color(a_board[l.row  + k][l.column + l], disc)){ // enemy or empty 
+				if ( a_board[l.row + k][l.column + l] == EMPTY ){
+					moves = link_moves(moves, create_move( l.row + k, l.column + l ));					
+				}
+				else { // enemy!!!
+					if ( (l.row + k-1  >= 0 && l.column + l+1 <= BOARD_SIZE-1)  && a_board[l.row + k-1][l.column + l+1] == EMPTY){ // EATING! :O
+						char a_board_copy;// copy the board to and change it  ????
+						moves = link_moves(moves, get_eating_moves(l.row + k-1, l.column + l+1, a_board_copy ))
+						break;
+						
+					}	
+				}
+			}
+			k--;
+			l++;
+		}
+		k = -1;
+		l = -1;
+		while ( l.row + k >= 0 && l.column + l >= 0 ){ // location is inside the board (upper left)
+			if ( !(same_color(a_board[l.row  + k][l.column + l], disc)){ // enemy or empty 
+				if ( a_board[l.row + k][l.column + l] == EMPTY ){
+					moves = link_moves(moves, create_move(l.row, l.column, l.row + k, l.column + l));					
+				}
+				else { // enemy!!!
+					if ( (l.row + k-1  >= 0 && l.column + l-1 >= 0)  && a_board[l.row + k-1][l.column + l-1] == EMPTY){ // EATING! :O
+						//???
+						break;
+						
+					}	
+				}
+			}
+			k--;
+			l--;
+		}
+		k = 1;
+		l = 1;
+		while ( l.row + k <= BOARD_SIZE-1 && l.column + l <= BOARD_SIZE-1 ){ // location is inside the board (lower right)
+			if ( !(same_color(a_board[l.row  + k][l.column + l], disc)){ // enemy or empty 
+				if ( a_board[l.row + k][l.column + l] == EMPTY ){
+					moves = link_moves(moves, create_move(l.row, l.column, l.row + k, l.column + l));					
+				}
+				else { // enemy!!!
+					if ( (l.row + k+1  >= 0 && l.column + l+1 <= BOARD_SIZE-1)  && a_board[l.row + k+1][l.column + l+1] == EMPTY){ // EATING! :O
+						//???
+						break;
+						
+					}	
+				}
+			}
+			k++;
+			l++;
+		}
+		k = 1;
+		l = -1;
+		while ( l.row + k <= BOARD_SIZE-1 && l.column + l >= 0 ){ // location is inside the board (lower left)
+			if ( !(same_color(a_board[l.row  + k][l.column + l], disc)){ // enemy or empty 
+				if ( a_board[l.row + k][l.column + l] == EMPTY ){
+					moves = link_moves(moves, create_move(l.row, l.column, l.row + k, l.column + l));					
+				}
+				else { // enemy!!!
+					if ( (l.row + k+1 <= BOARD_SIZE-1 && l.column + l-1 >= 0)  && a_board[l.row + k+1][l.column + l-1] == EMPTY){ // EATING! :O
+						//???
+						break;
+						
+					}	
+				}
+			}
+			k++;
+			l--;
+		}
+
+	}
+	else {
+		if ( (l.row - 1 >= 0 && l.column + 1 <= BOARD_SIZE-1) ){ // location is inside the board (upper right)
+			if ( !(same_color(a_board[l.row - 1][l.column + 1], disc)){ // enemy or empty 
+				if ( a_board[l.row - 1][l.column + 1] == EMPTY ){
+					if ( !IS_WHITE(disc) ){
+						moves = link_moves(moves, create_move(l.row, l.column, l.row -1, l.column + 1));					
+					}
+					
+				}
+				else { // enemy!!!
+					if ( (l.row - 2 >= 0 && l.column + 2 <= BOARD_SIZE-1)  && a_board[l.row - 2][l.column + 2] == EMPTY){ // EATING! :O
+						//???
+					}	
+				}
+			}
+		}
+		if ( (l.row - 1 >= 0 && l.column - 1  >= 0) ){ // location is inside the board (upper left)
+			if ( !(same_color(a_board[l.row - 1][l.column - 1], disc)){ // enemy or empty 
+				if ( a_board[l.row - 1][l.column - 1] == EMPTY ){
+					if ( !IS_WHITE(disc) ){
+						moves = link_moves(moves, create_move(l.row, l.column, l.row -1, l.column - 1));					
+					}					
+				}
+				else { // enemy!!!
+					if ( (l.row - 2 >= 0 && l.column - 2 >= 0 )  && a_board[l.row - 2][l.column - 2] == EMPTY){ // EATING! :O
+						//???
+					}	
+				}
+			}
+		}
+		if ( (l.row + 1 <= BOARD_SIZE-1 && l.column + 1 <= BOARD_SIZE-1) ){ // location is inside the board (lower right)
+			if ( !(same_color(a_board[l.row + 1][l.column + 1], disc)){ // enemy or empty 
+				if ( a_board[l.row + 1][l.column + 1] == EMPTY ){
+					if ( IS_WHITE(disc) ){
+						moves = link_moves(moves, create_move(l.row, l.column, l.row + 1, l.column + 1));					
+					}
+				}
+				else { // enemy!!!
+					if ( (l.row + 2 <= BOARD_SIZE-1 && l.column + 2 <= BOARD_SIZE-1)  && a_board[l.row + 2][l.column + 2] == EMPTY){ // EATING! :O
+						//???
+					}	
+				}
+			}
+		}
+		if ( (l.row + 1 <= BOARD_SIZE-1 && l.column - 1 >= 0) ){ // location is inside the board (lower left)
+			if ( !(same_color(a_board[l.row + 1][l.column - 1], disc)){ // enemy or empty 
+				if ( a_board[l.row + 1][l.column - 1] == EMPTY ){
+					if ( IS_WHITE(disc) ){
+						moves = link_moves(moves, create_move(l.row, l.column, l.row + 1, l.column - 1));					
+					}				
+				}
+				else { // enemy!!!
+					if ( (l.row + 2 <= BOARD_SIZE-1 && l.column - 2 >= 0)  && a_board[l.row + 2][l.column - 1] == EMPTY){ // EATING! :O
+						//???
+					}	
+				}
+			}
+		}
+	}	
+}
+
+int same_color(char a, char b){
+	if ( IS_WHITE(a) == IS_WHITE(b) ){
+		return 1;
+	}
+	return 0;
+}
+
+
+move* link_moves(move *moves, move *disc_moves){
+	move *temp = disc_moves;
+	if ( moves == NULL  && disc_moves == NULL ){
+		return NULL;
+	}
+	
+	if ( moves == NULL ){ // these are the first moves added
+		moves = disc_moves;
+		return moves;
+	}
+	
+	if ( disc_moves == NULL ){ // Nothing new to add
+		return moves;
+	}
+	
+	if ( temp.size < moves.size ) { // moves are better, dump new moves 
+		// ???free disc_moves here 
+		return moves;
+	}
+	
+	if ( temp.size > moves.size ) { // disc_moves is better, dump previous moves 
+		// ???free moves here 
+		moves = disc_moves;
+		return moves;
+	}
+	// else: (sizes are equal)
+	while ( temp.next != NULL ){ // reach last move of disc_moves
+		temp = temp.next;
+	}
+	if ( temp.size <= )
+	temp.next = moves;
+	moves = disc_moves;
+	return moves;
+}
+
+void print_move(move *m){
+	location *temp = m.step;
+	printf("<%d,%c> to ", temp.row,(temp.column+'a'));
+	while ( (temp = temp.next) != NULL){
+		printf("<%d,%c>", temp.row,(temp.column+'a'));
+	}
+	printf("\n")
+}
+
+void print_all_move(move *m){
+	while(m != NULL){
+		print_move(m);
+		m = m.next;
+	}
+}
+
+int is_legal_move(move* m){
+	location *temp_loc1; //  pointer for the pattern moves
+	location *temp_loc2; // pointer for the user move
+	move *moves = get_moves(WHITE_TURN, board ); // copy the board ????      //get pattern moves (legal)
+	move * temp_moves = moves;
+	while(temp_moves != NULL){ // check if one of the pattern moves is the same as the user move
+		temp_loc1 = temp_moves.step;
+		temp_loc2 = m.step;
+		while(temp_loc1 != NULL  && temp_loc2 != NULL){
+			if (temp_loc1.row != temp_loc2.row || temp_loc1.column != temp_loc2.column ){
+				break;
+			}
+			temp_loc1 = temp_loc1.next;
+			temp_loc2 = temp_loc2.next;
+		}
+		if (temp_loc1 == NULL  && temp_loc2 == NULL){ // the user move is the same as a legal move
+			return 1;
+		}
+		temp_moves = temp_moves.next;
+	}
+	//free moves ????
+	return 0;
+}
+/* void parse_input_game(char* input){
 	//??? something??
 	char *words; // will be a copy of the input.
 	char *word;
@@ -436,7 +651,7 @@ void parse_input_game(char* input){
 	}
 	free(words);
 }
-
+ */
 
 
 
@@ -461,12 +676,6 @@ int test3(void){ //print settings
 	return 1;
 }
 
-int test4(void){ //print copy of board
-	char **b;
-	b = copy_board(board);
-	print_board(b);
-	return 1;
-}
 /** the main function. */
 int main(){
 	char *input;
@@ -489,7 +698,6 @@ int main(){
 			parse_input_settings(input);
 		}
 		else if(GAME){ // game time
-			test4();
 			if ( PLAYER_WHITE && WHITE_TURN || !PLAYER_WHITE && !WHITE_TURN ){ //user's turn???maybe make different logic. 
 				printf("%s", ENTER_YOUR_MOVE);//should be here???
 				parse_input_game(input);
