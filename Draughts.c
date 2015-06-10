@@ -71,7 +71,7 @@ int NUM_BLACK_M = 0;
 int NUM_BLACK_K = 0;
 
 
-// *************** General methods ****************
+// 																		*************** General methods ****************
 
 void quit(void){
   exit(0);
@@ -81,7 +81,7 @@ void quit_allcation_error(void){
     exit(1);
 }
 
-// *************** Board init & print methods ****************
+//																		 *************** Board init & print methods ****************
 
 void print_line(){
 	int i;
@@ -136,7 +136,7 @@ void init_board(char board[BOARD_SIZE][BOARD_SIZE]){
 
 
 
-//  ********************** setters ***************************
+// 																		************************* setters ***************************
 
 void set_minmax_depth(int x){ //set the minimax_depth
   if (x > 0 && x < 7){
@@ -153,7 +153,8 @@ void set_user_color(char *s){ // default is white
  }
 }
 
-// ******************* settings phase functions ***********************
+//																	 	******************* settings phase functions ***********************
+
 
 /** clears the board (all EMPTY) */
 void clear(){ 
@@ -213,8 +214,6 @@ void set_location(location l, int white, int man){
   }
 }
   
-
-
 /** change phase - from now on settings is disable, 
   * game is enable. */  
 void start_game(void){
@@ -222,7 +221,6 @@ void start_game(void){
 	GAME = 1;
 }
 
- 
 /** reads the input from user by dynamically allocating
   * memory. On the go minimizes spaces to a max of one
   * space between words. 
@@ -379,7 +377,7 @@ void declare_winner(void){
 	printf("%s player wins!\n", winner);
 }
 
-// ******************* game phase functions ***********************
+// 																	******************* game phase functions ***********************
 move* get_moves(char *a_board, int is_white_turn){
 	
 	// initialize a move linked list:
@@ -599,7 +597,7 @@ void print_move(move *m){
 	printf("\n")
 }
 
-void print_all_move(move *m){
+void print_all_moves(move *m){
 	while(m != NULL){
 		print_move(m);
 		m = m.next;
@@ -655,7 +653,7 @@ int is_legal_move(move* m){
 
 
 
-// *********************** tests ************************
+// 																		*********************** tests ************************
 int test1(void){
 	char temp_board[BOARD_SIZE][BOARD_SIZE];
 	init_board(temp_board);
@@ -675,7 +673,14 @@ int test3(void){ //print settings
 	printf("WHITE_TURN = %d\n",WHITE_TURN);
 	return 1;
 }
-
+int test4(void){ //print all this turn moves + board
+	print_board(board);
+	printf("WHITE_TURN = %d",WHITE_TURN);
+	move *moves = get_moves(board, WHITE_TURN);
+	print_all_moves(moves);
+	//free moves ????
+	return 1
+}
 /** the main function. */
 int main(){
 	char *input;
