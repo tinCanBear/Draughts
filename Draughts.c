@@ -16,10 +16,9 @@ typedef struct  //define a location
 typedef struct 
 {
   int eats; //how good is this move 
-  location step; //will be a linked list of steps within this move	
+  location *step; //will be a linked list of steps within this move	
   struct move *next;	//linked list of moves
-  struct move *last;	//last move linked list of moves
-	
+ 	
 } move;
 
 
@@ -28,7 +27,7 @@ typedef struct
 void set_minmax_depth(int x);
 void set_user_color(char *s);
 void quit(void);
-void clear();
+void clear(void);
 void remove_location(location l);
 int is_legal_location(location l);
 void set_location(location l, int white, int man);
@@ -80,6 +79,52 @@ void quit_allcation_error(void){
 	perror("Failed to allocate memory.");
     exit(1);
 }
+
+/** create location. */
+location *create_location(int i, int j){
+	location *l;
+	if ((l = (location *)malloc(1*sizeof(location))) == NULL){
+		quit_allcation_error();
+	}
+ 
+	l->row = i;
+	l->column = j;
+	return l;
+}
+
+/** create move. if i==(-1) will create empty move.*/
+move *create_move(int i, int j){
+	move *m;
+	if ((m = (move *)malloc(1*sizeof(move))) == NULL){
+		quit_allcation_error();
+	}
+	m->eats = 0;
+	m->next = NULL;
+	if (i == -1){
+		m->step = NULL; 
+	}else{
+		location *l = create_location(i , j);
+		m->step = l;
+	}
+	return m;
+}
+
+/** frees location (as a link list). */
+void free_location(location *l){
+	if ( l != NULL ){
+		free_location(l->next);
+		free(l);
+	}
+}
+
+/** frees move (as a link list). */
+void free_move(move *m){
+	if ( m != NULL ){
+		free_move(m->next);
+		free_location(m->step);
+		free(m);
+	}
+} 
 
 //																		 *************** Board init & print methods ****************
 
@@ -157,7 +202,7 @@ void set_user_color(char *s){ // default is white
 
 
 /** clears the board (all EMPTY) */
-void clear(){ 
+void clear(void){ 
   for (int i = 0; i < BOARD_SIZE; i++){
     for ( int j = 0; j < BOARD_SIZE; j++){
       board[i][j] = EMPTY;
@@ -378,14 +423,11 @@ void declare_winner(void){
 }
 
 // 																	******************* game phase functions ***********************
-move* get_moves(char *a_board, int is_white_turn){
+move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
 	
 	// initialize a move linked list:
 	move moves = NULL; 
 	location *l;
-	if (( l = malloc(sizeof *l)) == NULL ){
-		quit_allcation_error();
-	}
 	// find out who's turn it is
 	char man = is_white_turn ? WHITE_M : BLACK_M;
 	char king = is_white_turn ? WHITE_K : BLACK_K;
@@ -394,8 +436,7 @@ move* get_moves(char *a_board, int is_white_turn){
 		for ( int j = 0; j < BOARD_SIZE; j++ ){
 			if (  board[i][j] == man || board[i][j] == king ){
 				move disc_moves;
-				l.row = i; //???maybe we want to transfer just the i,j?
-				l.column = j;
+				l = create_location(i,j);
 				disc_moves = get_disc_moves(a_board, l); // get the moves for the discs in this location
 				moves = link_moves(moves,disc_moves); // concatenate the linked lists
 			}
@@ -404,87 +445,109 @@ move* get_moves(char *a_board, int is_white_turn){
 	return moves;
 }
 
-move* get_disc_moves(char* a_board, location l){
+move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location l){
 	char disc = a_board[l.row][l.column];
 	move moves = NULL;
 	int eat; // it is possible to eat (first step)
+	
+		// A king 
 	if ( disc == BLACK_K || disc == WHITE_K ){
 		int k = -1;
-		int l = 1;
-		while ( l.row + k >= 0 && l.column + l <= BOARD_SIZE-1 ){ // location is inside the board (upper right)
-			if ( !(same_color(a_board[l.row  + k][l.column + l], disc)){ // enemy or empty 
-				if ( a_board[l.row + k][l.column + l] == EMPTY ){
-					moves = link_moves(moves, create_move( l.row + k, l.column + l ));					
+		int n = 1;
+		while ( l.row + k >= 0 && l.column + n <= BOARD_SIZE-1 ){ // location is inside the board (upper right)
+			if ( !(same_color(a_board[l.row  + k][l.column + n], disc)){ // enemy or empty 
+				if ( a_board[l.row + k][l.column + n] == EMPTY ){
+					moves = link_moves(moves, create_move( l.row + k, l.column + n ));					
 				}
 				else { // enemy!!!
-					if ( (l.row + k-1  >= 0 && l.column + l+1 <= BOARD_SIZE-1)  && a_board[l.row + k-1][l.column + l+1] == EMPTY){ // EATING! :O
-						char a_board_copy;// copy the board to and change it  ????
-						moves = link_moves(moves, get_eating_moves(l.row + k-1, l.column + l+1, a_board_copy ))
+					if ( (l.row + k-1  >= 0 && l.column + n+1 <= BOARD_SIZE-1)  && a_board[l.row + k-1][l.column + n+1] == EMPTY){ // EATING! :O
+						char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+						memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+						a_board_copy[l.row + k-1][l.column + n+1] = disc; // disc to new spot*
+						a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+						a_board_copy[l.row + k][l.column + n] = EMPTY; // remove enemy disc 
+						moves = link_moves(moves, get_eating_moves(l.row + k-1, l.column + n+1, a_board_copy )); // 
 						break;
 						
 					}	
 				}
 			}
 			k--;
-			l++;
+			n++;
 		}
 		k = -1;
-		l = -1;
-		while ( l.row + k >= 0 && l.column + l >= 0 ){ // location is inside the board (upper left)
-			if ( !(same_color(a_board[l.row  + k][l.column + l], disc)){ // enemy or empty 
-				if ( a_board[l.row + k][l.column + l] == EMPTY ){
-					moves = link_moves(moves, create_move(l.row, l.column, l.row + k, l.column + l));					
+		n = -1;
+		while ( l.row + k >= 0 && l.column + n >= 0 ){ // location is inside the board (upper left)
+			if ( !(same_color(a_board[l.row  + k][l.column + n], disc)){ // enemy or empty 
+				if ( a_board[l.row + k][l.column + n] == EMPTY ){
+					moves = link_moves(moves, create_move(l.row, l.column, l.row + k, l.column + n));					
 				}
 				else { // enemy!!!
-					if ( (l.row + k-1  >= 0 && l.column + l-1 >= 0)  && a_board[l.row + k-1][l.column + l-1] == EMPTY){ // EATING! :O
-						//???
+					if ( (l.row + k-1  >= 0 && l.column + n-1 >= 0)  && a_board[l.row + k-1][l.column + n-1] == EMPTY){ // EATING! :O
+						char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+						memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+						a_board_copy[l.row + k-1][l.column + n-1] = disc; // disc to new spot*
+						a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+						a_board_copy[l.row + k][l.column + n] = EMPTY; // remove enemy disc 
+						moves = link_moves(moves, get_eating_moves(l.row + k-1, l.column + n-1, a_board_copy )); // 
 						break;
 						
 					}	
 				}
 			}
 			k--;
-			l--;
+			n--;
 		}
 		k = 1;
-		l = 1;
-		while ( l.row + k <= BOARD_SIZE-1 && l.column + l <= BOARD_SIZE-1 ){ // location is inside the board (lower right)
-			if ( !(same_color(a_board[l.row  + k][l.column + l], disc)){ // enemy or empty 
-				if ( a_board[l.row + k][l.column + l] == EMPTY ){
-					moves = link_moves(moves, create_move(l.row, l.column, l.row + k, l.column + l));					
+		n = 1;
+		while ( l.row + k <= BOARD_SIZE-1 && l.column + n <= BOARD_SIZE-1 ){ // location is inside the board (lower right)
+			if ( !(same_color(a_board[l.row  + k][l.column + n], disc)){ // enemy or empty 
+				if ( a_board[l.row + k][l.column + n] == EMPTY ){
+					moves = link_moves(moves, create_move(l.row, l.column, l.row + k, l.column + n));					
 				}
 				else { // enemy!!!
-					if ( (l.row + k+1  >= 0 && l.column + l+1 <= BOARD_SIZE-1)  && a_board[l.row + k+1][l.column + l+1] == EMPTY){ // EATING! :O
-						//???
+					if ( (l.row + k+1  >= 0 && l.column + n+1 <= BOARD_SIZE-1)  && a_board[l.row + k+1][l.column + n+1] == EMPTY){ // EATING! :O
+						char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+						memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+						a_board_copy[l.row + k+1][l.column + n+1] = disc; // disc to new spot*
+						a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+						a_board_copy[l.row + k][l.column + n] = EMPTY; // remove enemy disc 
+						moves = link_moves(moves, get_eating_moves(l.row + k+1, l.column + n+1, a_board_copy )); // 
 						break;
 						
 					}	
 				}
 			}
 			k++;
-			l++;
+			n++;
 		}
 		k = 1;
-		l = -1;
-		while ( l.row + k <= BOARD_SIZE-1 && l.column + l >= 0 ){ // location is inside the board (lower left)
-			if ( !(same_color(a_board[l.row  + k][l.column + l], disc)){ // enemy or empty 
-				if ( a_board[l.row + k][l.column + l] == EMPTY ){
-					moves = link_moves(moves, create_move(l.row, l.column, l.row + k, l.column + l));					
+		n = -1;
+		while ( l.row + k <= BOARD_SIZE-1 && l.column + n >= 0 ){ // location is inside the board (lower left)
+			if ( !(same_color(a_board[l.row  + k][l.column + n], disc)){ // enemy or empty 
+				if ( a_board[l.row + k][l.column + n] == EMPTY ){
+					moves = link_moves(moves, create_move(l.row, l.column, l.row + k, l.column + n));					
 				}
 				else { // enemy!!!
-					if ( (l.row + k+1 <= BOARD_SIZE-1 && l.column + l-1 >= 0)  && a_board[l.row + k+1][l.column + l-1] == EMPTY){ // EATING! :O
-						//???
+					if ( (l.row + k+1 <= BOARD_SIZE-1 && l.column + n-1 >= 0)  && a_board[l.row + k+1][l.column + n-1] == EMPTY){ // EATING! :O
+						char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+						memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+						a_board_copy[l.row + k+1][l.column + n-1] = disc; // disc to new spot*
+						a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+						a_board_copy[l.row + k][l.column + n] = EMPTY; // remove enemy disc 
+						moves = link_moves(moves, get_eating_moves(l.row + k+1, l.column + n-1, a_board_copy )); // 
 						break;
 						
 					}	
 				}
 			}
 			k++;
-			l--;
+			n--;
 		}
 
 	}
-	else {
+		// A man
+	else {	
 		if ( (l.row - 1 >= 0 && l.column + 1 <= BOARD_SIZE-1) ){ // location is inside the board (upper right)
 			if ( !(same_color(a_board[l.row - 1][l.column + 1], disc)){ // enemy or empty 
 				if ( a_board[l.row - 1][l.column + 1] == EMPTY ){
@@ -495,7 +558,12 @@ move* get_disc_moves(char* a_board, location l){
 				}
 				else { // enemy!!!
 					if ( (l.row - 2 >= 0 && l.column + 2 <= BOARD_SIZE-1)  && a_board[l.row - 2][l.column + 2] == EMPTY){ // EATING! :O
-						//???
+						char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+						memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+						a_board_copy[l.row-2][l.column+2] = disc; // disc to new spot*
+						a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+						a_board_copy[l.row - 1][l.column + 1] = EMPTY; // remove enemy disc 
+						moves = link_moves(moves, get_eating_moves(l.row - 2, l.column  + 2, a_board_copy )); // 
 					}	
 				}
 			}
@@ -509,7 +577,12 @@ move* get_disc_moves(char* a_board, location l){
 				}
 				else { // enemy!!!
 					if ( (l.row - 2 >= 0 && l.column - 2 >= 0 )  && a_board[l.row - 2][l.column - 2] == EMPTY){ // EATING! :O
-						//???
+						char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+						memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+						a_board_copy[l.row-2][l.column-2] = disc; // disc to new spot*
+						a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+						a_board_copy[l.row - 1][l.column - 1] = EMPTY; // remove enemy disc 
+						moves = link_moves(moves, get_eating_moves(l.row - 2, l.column  - 2, a_board_copy )); // 
 					}	
 				}
 			}
@@ -523,7 +596,12 @@ move* get_disc_moves(char* a_board, location l){
 				}
 				else { // enemy!!!
 					if ( (l.row + 2 <= BOARD_SIZE-1 && l.column + 2 <= BOARD_SIZE-1)  && a_board[l.row + 2][l.column + 2] == EMPTY){ // EATING! :O
-						//???
+						char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+						memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+						a_board_copy[l.row+2][l.column+2] = disc; // disc to new spot*
+						a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+						a_board_copy[l.row + 1][l.column + 1] = EMPTY; // remove enemy disc 
+						moves = link_moves(moves, get_eating_moves(l.row + 2, l.column  + 2, a_board_copy )); // 
 					}	
 				}
 			}
@@ -537,14 +615,106 @@ move* get_disc_moves(char* a_board, location l){
 				}
 				else { // enemy!!!
 					if ( (l.row + 2 <= BOARD_SIZE-1 && l.column - 2 >= 0)  && a_board[l.row + 2][l.column - 1] == EMPTY){ // EATING! :O
-						//???
+						char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+						memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+						a_board_copy[l.row+2][l.column-2] = disc; // disc to new spot*
+						a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+						a_board_copy[l.row + 1][l.column - 1] = EMPTY; // remove enemy disc 
+						moves = link_moves(moves, get_eating_moves(l.row + 2, l.column  - 2, a_board_copy )); // 
 					}	
 				}
 			}
 		}
 	}	
+	return moves;
 }
 
+move *get_eating_moves(int i ,int j, char a_board[BOARD_SIZE][BOARD_SIZE]){
+	move *moves = NULL;
+	move *upper_right_moves = NULL;
+	move *upper_left_moves = NULL;
+	move *lower_right_moves = NULL;
+	move *lower_left_moves = NULL;
+	move *temp_move = NULL;
+	location *current_loc;
+	location *l = create_location(i,j);
+	char disc = a_board[l.row][l.column];
+	if ( (l.row - 1 >= 0 && l.column + 1 <= BOARD_SIZE-1) ){ // location is inside the board (upper right)
+		if ( !(same_color(a_board[l.row - 1][l.column + 1], disc)){ // enemy or empty 
+			if ( !(a_board[l.row - 1][l.column + 1] == EMPTY) ){ // enemy!!!
+				if ( (l.row - 2 >= 0 && l.column + 2 <= BOARD_SIZE-1)  && a_board[l.row - 2][l.column + 2] == EMPTY){ // EATING! :O
+					char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+					memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+					a_board_copy[l.row-2][l.column+2] = disc; // disc to new spot*
+					a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+					a_board_copy[l.row - 1][l.column + 1] = EMPTY; // remove enemy disc 
+					moves = link_moves(moves, get_eating_moves(l.row - 2, l.column  + 2, a_board_copy )); // 
+				}	
+			}
+		}
+	}
+	if ( (l.row - 1 >= 0 && l.column - 1  >= 0) ){ // location is inside the board (upper left)
+		if ( !(same_color(a_board[l.row - 1][l.column - 1], disc)){ // enemy or empty 
+			if ( !(a_board[l.row - 1][l.column - 1] == EMPTY )){ // enemy!!!
+				if ( (l.row - 2 >= 0 && l.column - 2 >= 0 )  && a_board[l.row - 2][l.column - 2] == EMPTY){ // EATING! :O
+					char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+					memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+					a_board_copy[l.row-2][l.column-2] = disc; // disc to new spot*
+					a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+					a_board_copy[l.row - 1][l.column - 1] = EMPTY; // remove enemy disc 
+					moves = link_moves(moves, get_eating_moves(l.row - 2, l.column  - 2, a_board_copy )); // 
+				}	
+			}
+		}
+	}
+	if ( (l.row + 1 <= BOARD_SIZE-1 && l.column + 1 <= BOARD_SIZE-1) ){ // location is inside the board (lower right)
+		if ( !(same_color(a_board[l.row + 1][l.column + 1], disc)){ // enemy or empty 
+			if ( !(a_board[l.row + 1][l.column + 1] == EMPTY) ){ // enemy!!!
+				if ( (l.row + 2 <= BOARD_SIZE-1 && l.column + 2 <= BOARD_SIZE-1)  && a_board[l.row + 2][l.column + 2] == EMPTY){ // EATING! :O
+					char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+					memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+					a_board_copy[l.row+2][l.column+2] = disc; // disc to new spot*
+					a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+					a_board_copy[l.row + 1][l.column + 1] = EMPTY; // remove enemy disc 
+					moves = link_moves(moves, get_eating_moves(l.row + 2, l.column  + 2, a_board_copy )); // 
+				}	
+			}
+		}
+	}
+	if ( (l.row + 1 <= BOARD_SIZE-1 && l.column - 1 >= 0) ){ // location is inside the board (lower left)
+		if ( !(same_color(a_board[l.row + 1][l.column - 1], disc)){ // enemy or empty 
+			if ( !(a_board[l.row + 1][l.column - 1] == EMPTY )){ // enemy!!!
+				if ( (l.row + 2 <= BOARD_SIZE-1 && l.column - 2 >= 0)  && a_board[l.row + 2][l.column - 1] == EMPTY){ // EATING! :O
+					char a_board_copy[BOARD_SIZE][BOARD_SIZE];
+					memcpy(a_board_copy, board, sizeof(a_board_copy)); //copy the board
+					a_board_copy[l.row+2][l.column-2] = disc; // disc to new spot*
+					a_board_copy[l.row][l.column] = EMPTY; // remove disc from previous location
+					a_board_copy[l.row + 1][l.column - 1] = EMPTY; // remove enemy disc 
+					moves = link_moves(moves, get_eating_moves(l.row + 2, l.column  - 2, a_board_copy )); // 
+				}	
+			}
+		}
+	}
+	free_location(l);
+	if (moves == NULL){ // end of the recursion.
+		moves = create_move(-1, -1);// create empty move.
+	}
+	temp_move = moves;
+	while(temp_move != NULL){
+		current_loc = create_location(i,j);
+		temp_move->eats++;
+		current_loc->next = temp_move->step;
+		temp_move->step = current_loc;
+		temp_move = temp_move->next;
+	}
+	return moves;
+	//
+	
+	
+	
+	
+	
+}
 int same_color(char a, char b){
 	if ( IS_WHITE(a) == IS_WHITE(b) ){
 		return 1;
@@ -569,13 +739,13 @@ move* link_moves(move *moves, move *disc_moves){
 	}
 	
 	if ( temp.size < moves.size ) { // moves are better, dump new moves 
-		// ???free disc_moves here 
+		free_move(disc_moves); 
 		return moves;
 	}
 	
 	if ( temp.size > moves.size ) { // disc_moves is better, dump previous moves 
-		// ???free moves here 
-		moves = disc_moves;
+		free_move(moves); 
+		moves = disc_moves; //???pointer still exists?....
 		return moves;
 	}
 	// else: (sizes are equal)
@@ -589,10 +759,10 @@ move* link_moves(move *moves, move *disc_moves){
 }
 
 void print_move(move *m){
-	location *temp = m.step;
-	printf("<%d,%c> to ", temp.row,(temp.column+'a'));
-	while ( (temp = temp.next) != NULL){
-		printf("<%d,%c>", temp.row,(temp.column+'a'));
+	location *temp = m->step;
+	printf("<%d,%c> to ", temp->row,(temp->column+'a'));
+	while ( (temp = temp->next) != NULL){
+		printf("<%d,%c>", temp->row,(temp->column+'a'));
 	}
 	printf("\n")
 }
@@ -600,31 +770,31 @@ void print_move(move *m){
 void print_all_moves(move *m){
 	while(m != NULL){
 		print_move(m);
-		m = m.next;
+		m = m->next;
 	}
 }
 
 int is_legal_move(move* m){
 	location *temp_loc1; //  pointer for the pattern moves
 	location *temp_loc2; // pointer for the user move
-	move *moves = get_moves(WHITE_TURN, board ); // copy the board ????      //get pattern moves (legal)
+	move *moves = get_moves(WHITE_TURN, board ); //get pattern moves (legal)
 	move * temp_moves = moves;
 	while(temp_moves != NULL){ // check if one of the pattern moves is the same as the user move
-		temp_loc1 = temp_moves.step;
-		temp_loc2 = m.step;
+		temp_loc1 = temp_moves->step;
+		temp_loc2 = m->step;
 		while(temp_loc1 != NULL  && temp_loc2 != NULL){
-			if (temp_loc1.row != temp_loc2.row || temp_loc1.column != temp_loc2.column ){
+			if (temp_loc1->row != temp_loc2->row || temp_loc1->column != temp_loc2->column ){
 				break;
 			}
-			temp_loc1 = temp_loc1.next;
-			temp_loc2 = temp_loc2.next;
+			temp_loc1 = temp_loc1->next;
+			temp_loc2 = temp_loc2->next;
 		}
 		if (temp_loc1 == NULL  && temp_loc2 == NULL){ // the user move is the same as a legal move
 			return 1;
 		}
-		temp_moves = temp_moves.next;
+		temp_moves = temp_moves->next;
 	}
-	//free moves ????
+	free_move(moves);
 	return 0;
 }
 /* void parse_input_game(char* input){
@@ -678,7 +848,7 @@ int test4(void){ //print all this turn moves + board
 	printf("WHITE_TURN = %d",WHITE_TURN);
 	move *moves = get_moves(board, WHITE_TURN);
 	print_all_moves(moves);
-	//free moves ????
+	free_move(movse);
 	return 1
 }
 /** the main function. */
