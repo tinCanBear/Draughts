@@ -47,11 +47,9 @@ int same_color(char a, char b);
 void print_move(move *m);
 void print_all_moves(move *m);
 int is_legal_move(move* m);// will check if move is legal
-
-//??? to be implemented:
-void parse_input_game(char* input); //similar to that of the settings phase.
+int parse_input_game(char* input); //similar to that of the settings phase.
  
-//???
+
 
 //Define macros:
 
@@ -820,7 +818,7 @@ void print_all_moves(move *m){
 int is_legal_move(move* m){
 	location *temp_loc1; //  pointer for the pattern moves
 	location *temp_loc2; // pointer for the user move
-	move *moves = get_moves(board, WHITE_TURN ); //get pattern moves (legal)
+	move *moves = get_moves(board, WHITE_TURN); //get pattern moves (legal)
 	move * temp_moves = moves;
 	while(temp_moves != NULL){ // check if one of the pattern moves is the same as the user move
 		temp_loc1 = temp_moves->step;
@@ -871,7 +869,7 @@ void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m){
 	}
 }
 
-/* void parse_input_game(char* input){
+int parse_input_game(char* input){
 	//??? something??
 	char *words; // will be a copy of the input.
 	char *word;
@@ -883,17 +881,76 @@ void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m){
 	word = strtok(words, " ");
 	// check if 'word' matches a legal (game) command: 
 	if ( strcmp(word, "move") == 0){
-		//???
+		free(words);
+		move *user_move = create_move(-1,-1); // create empty move.
+		location *l = NULL;
+		location *last_l; 
+		int column;
+		int row;
+		for(int i = 0; input[i] != '\0'; i++){
+			if ( input[i]== '<' ){
+				column = input[i+1] - 'a'; // convert the row to integer
+				row = 0;
+				for ( int j = i+3 ; input[j] != '>' ; j++ ){ // calculate column value (could be '10')
+					row = 10 * row + (input[j] - '0');
+					i = j;
+				} 
+				l = create_location(row-1,column);
+			}
+			if ( user_move->step == NULL ){
+				user_move->step = l;
+				last_l = l;
+			}
+			else{
+				last_l->next = l;
+				last_l = last_l->next;
+			}
+			if (l != NULL && !is_legal_location(*l)){
+				print_message(WRONG_POSITION);
+				free_move(user_move);
+				return 1;
+			}
+		}
+	
+		if (user_move->step != NULL){
+			char disc = board[user_move->step->column][user_move->step->row];
+			if (PLAYER_WHITE && ((disc == BLACK_K) || (disc == BLACK_M) || (disc == EMPTY))){
+				print_message(NO_DICS);
+				free_move(user_move);
+				return 1;
+			}
+			if ((!PLAYER_WHITE) && ((disc == WHITE_K) || (disc == WHITE_M) || (disc == EMPTY))){
+				print_message(NO_DICS);
+				free_move(user_move);
+				return 1;
+			}			
+		}
+		if (is_legal_move(user_move)){
+			do_move(board, user_move);
+			free_move(user_move);
+			return 0;
+		}
+		else{ // move is illegal
+			print_message(ILLEGAL_MOVE);
+			print_move(user_move);
+			free_move(user_move);
+			return 1;			
+		}
 	}
 	else if ( strcmp(word, "get_moves") == 0){
-		//???
+		move *user_moves = get_moves(board, PLAYER_WHITE);
+		print_all_moves(user_moves);
+		free(words);
+		free_move(user_moves);
+		return 1;
 	}
 	else { // 'word' doesn't match any legal (game) command 
 		print_message( ILLEGAL_COMMAND );
+		free(words);
+		return 1;
 	}
-	free(words);
 }
- */
+ 
 
 
 
@@ -1003,31 +1060,45 @@ int main(){
 	// start the settings phase
 	printf("%s",ENTER_SETTINGS);
 	while(1){
-		input = read_input();///read input here???? maybe inside the phases? because if it's the computer's turn...
-		if(strcmp(input,"\0") == 0){ // verify input isn't empty.
-			free(input);
-			continue;
+		if ( (PLAYER_WHITE && WHITE_TURN) || (!PLAYER_WHITE && !WHITE_TURN)  || (SETTINGS)){
+			if (GAME){
+				print_message(ENTER_YOUR_MOVE);
+			}
+			input = read_input();
+			if(strcmp(input,"\0") == 0){ // verify input isn't empty.
+				free(input);
+				continue;
+			}
+			if (strcmp(input, "quit") == 0){
+				free(input);
+				quit();
+			}
 		}
-		if (strcmp(input, "quit") == 0){
-			free(input);
-			quit();
-		}
-		else if(SETTINGS){ // settings phase
+		if(SETTINGS){ // settings phase
 			parse_input_settings(input);
 		}
 		else if(GAME){ // game time
-/* 			if ( (PLAYER_WHITE && WHITE_TURN) || (!PLAYER_WHITE && !WHITE_TURN) ){ //user's turn???maybe make different logic. 
-				printf("%s", ENTER_YOUR_MOVE);//should be here???
-				parse_input_game(input);
+ 			if ( (PLAYER_WHITE && WHITE_TURN) || (!PLAYER_WHITE && !WHITE_TURN) ){ //user's turn???maybe make different logic. 
+				//should be here???
+				if (parse_input_game(input)){ //'1' if user's input was wrong in some way, need another input
+					WHITE_TURN = (WHITE_TURN + 1)%2;
+				}
+				/* else { //move is done ??? check if someone won???
+					
+				} */
 			}
-			else { // computer's turn
+			/* else { // computer's turn
 				// do something???
-			} */
-			test3();
-			test6();
-			test2();
-			
+			} */ 
 			WHITE_TURN = (WHITE_TURN + 1)%2;
+			move *m = get_moves(board,WHITE_TURN);
+			if( m == NULL){
+				print_message("game's over\n");
+				GAME = 0;
+			}else{
+				print_message("game's not over?1!\n")
+				free_move(m);
+			}
 		}
 		if(!GAME && !SETTINGS){  // game's over
 			declare_winner();
