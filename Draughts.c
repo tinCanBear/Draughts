@@ -952,19 +952,37 @@ int test5(void){ //print all moves(black) + board
 	fflush(stdout);
 	return 1;
 }
-int test6(void){ //print all moves(white) + board
+
+int test6(void){ //print all moves(black) + board
 	printf("*************** test6 ******************\n");
 	char temp_board[BOARD_SIZE][BOARD_SIZE];
-	temp_board[6][6] = WHITE_K;
-	temp_board[4][4] = BLACK_M;
-	temp_board[3][3] = BLACK_M;
+	for (int i = 0; i < BOARD_SIZE; i++){
+		for ( int j = 0; j < BOARD_SIZE; j++){
+			temp_board[i][j] = EMPTY;
+		}
+	}
+	temp_board[6][0] = BLACK_K;
+	temp_board[9][1] = BLACK_M;
+	temp_board[8][2] = WHITE_M;
+	temp_board[8][4] = WHITE_M;
+	temp_board[8][6] = WHITE_M;
+	temp_board[8][8] = WHITE_M;
+	temp_board[6][6] = WHITE_M;
+	temp_board[4][4] = WHITE_M;
 	print_board(temp_board);
-	printf("WHITE_TURN = %d\n",1);
-	move *moves = get_moves(temp_board, 1);
+	printf("WHITE_TURN = %d\n",0);
+	move *moves = get_moves(temp_board, 0);
 	printf("got moves! \n printing moves: \n");
 	fflush(stdout);
 	print_all_moves(moves);
-	//free_move(moves);
+	printf("do move: \n");
+	do_move(temp_board, moves);
+	print_board(temp_board);
+	printf("free moves: \n");
+	fflush(stdout);
+	free_move(moves);
+	printf("free is done! \n");
+	fflush(stdout);
 	return 1;
 }
 /** the main function. */
@@ -997,7 +1015,7 @@ int main(){
 				// do something???
 			} */
 			test3();
-			test5();
+			test7();
 			test2();
 			
 			WHITE_TURN = (WHITE_TURN + 1)%2;
