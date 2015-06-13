@@ -65,7 +65,7 @@ int NUM_WHITE_M = 0;
 int NUM_WHITE_K = 0;
 int NUM_BLACK_M = 0;
 int NUM_BLACK_K = 0;
-int DEBUGGING = 1;  
+int DEBUGGING = 0;  
 /* 
 if (DEBUGGING){
 	printf("\n");
@@ -459,8 +459,8 @@ move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
 					fflush(stdout);
 				}
 				moves = link_moves(moves,disc_moves); // concatenate the linked lists
-				free_location(l);//???
-				l = NULL;//??? 
+				//free_location(l);//???
+				//l = NULL;//??? 
 				
 			}
 		}
@@ -764,14 +764,8 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 		temp_move->step = current_loc;
 		temp_move = temp_move->next;
 	}
-	free_location(l);
-	return moves;
-	//
-	
-	
-	
-	
-	
+	//free_location(l);
+	return moves;	
 }
 int same_color(char a, char b){
 	if ((a == EMPTY && b != EMPTY) || (b == EMPTY && a != EMPTY) ){
@@ -800,12 +794,12 @@ move* link_moves(move *moves, move *disc_moves){
 	}
 	
 	if ( temp->eats < moves->eats ) { // moves are better, dump new moves 
-		free_move(disc_moves); 
+		//free_move(disc_moves); 
 		return moves;
 	}
 	
 	if ( temp->eats > moves->eats ) { // disc_moves is better, dump previous moves 
-		free_move(moves); 
+		//free_move(moves); 
 		moves = disc_moves; //???pointer still exists?....
 		return moves;
 	}
@@ -854,7 +848,7 @@ int is_legal_move(move* m){
 		}
 		temp_moves = temp_moves->next;
 	}
-	free_move(moves);
+	//free_move(moves);
 	return 0;
 }
 
@@ -903,7 +897,7 @@ int parse_input_game(char* input){
 		free(words);
 		move *user_move = create_move(-1,-1); // create empty move.
 		location *l = NULL;
-		location *last_l; 
+		location *last_l = NULL; 
 		int column;
 		int row;
 		for(int i = 0; input[i] != '\0'; i++){
@@ -912,47 +906,60 @@ int parse_input_game(char* input){
 				row = 0;
 				for ( int j = i+3 ; input[j] != '>' ; j++ ){ // calculate column value (could be '10')
 					row = 10 * row + (input[j] - '0');
-					i = j;
+					i = j; //???
 				} 
 				l = create_location(row-1,column);
-			}
-			if ( user_move->step == NULL ){
-				user_move->step = l;
-				last_l = l;
-			}
-			else{
+				if ( user_move->step == NULL ){
+					user_move->step = l;
+					last_l = l;
+				}
+				else{
 				last_l->next = l;
 				last_l = last_l->next;
+				}
+				if (l != NULL && !is_legal_location(*l)){
+					print_message(WRONG_POSITION);
+					//free_move(user_move);
+					return 1;
+				}
 			}
-			if (l != NULL && !is_legal_location(*l)){
-				print_message(WRONG_POSITION);
-				free_move(user_move);
-				return 1;
-			}
+
 		}
 	
 		if (user_move->step != NULL){
 			char disc = board[user_move->step->column][user_move->step->row];
 			if (PLAYER_WHITE && ((disc == BLACK_K) || (disc == BLACK_M) || (disc == EMPTY))){
 				print_message(NO_DICS);
-				free_move(user_move);
+				//free_move(user_move);
 				return 1;
 			}
 			if ((!PLAYER_WHITE) && ((disc == WHITE_K) || (disc == WHITE_M) || (disc == EMPTY))){
 				print_message(NO_DICS);
-				free_move(user_move);
+				//free_move(user_move);
 				return 1;
 			}			
 		}
 		if (is_legal_move(user_move)){
+			int next_col = user_move->step->next->column;
+			int next_row = user_move->step->next->row;
+			int this_col = user_move->step->column;
+			int this_row = user_move->step->row;
+			int up;
+			int right;
+			char disc = board[this_col][this_row];
+			up = next_row > this_row ? 1 : -1;
+			right = next_col > this_col ? 1 : -1;
+			if ( board[next_col - right][next_row - up] != disc ){
+				user_move->eats = 1;
+			}
 			do_move(board, user_move);
-			free_move(user_move);
+			//free_move(user_move);
 			return 0;
 		}
 		else{ // move is illegal
 			print_message(ILLEGAL_MOVE);
 			print_move(user_move);
-			free_move(user_move);
+			//free_move(user_move);
 			return 1;			
 		}
 	}
@@ -960,7 +967,7 @@ int parse_input_game(char* input){
 		move *user_moves = get_moves(board, PLAYER_WHITE);
 		print_all_moves(user_moves);
 		free(words);
-		free_move(user_moves);
+		//free_move(user_moves);
 		return 1;
 	}
 	else { // 'word' doesn't match any legal (game) command 
@@ -1101,22 +1108,26 @@ int main(){
 				//should be here???
 				if (parse_input_game(input)){ //'1' if user's input was wrong in some way, need another input
 					WHITE_TURN = (WHITE_TURN + 1)%2;
+					print_message("****turn's over*****");
 				} 
 				/* else { //move is done ??? check if someone won???
 					
 				} */
 			}
-			/* else { // computer's turn
-				// do something???
-			} */ 
+			else { // computer's turn
+				print_message("****computer's turn***");//???
+				move *comp_moves = get_moves(board, WHITE_TURN);// do something???
+				do_move(board, comp_moves);
+			}  
 			WHITE_TURN = (WHITE_TURN + 1)%2;
 			move *m = get_moves(board,WHITE_TURN);
+			print_board(board);
 			if( m == NULL){
 				print_message("game's over\n");
 				GAME = 0;
 			}else{
 				print_message("game's not over?1!\n")
-				free_move(m);
+				//free_move(m);
 			}
 		}
 		if(!GAME && !SETTINGS){  // game's over
