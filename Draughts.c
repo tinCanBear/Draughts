@@ -65,7 +65,7 @@ int NUM_WHITE_M = 0;
 int NUM_WHITE_K = 0;
 int NUM_BLACK_M = 0;
 int NUM_BLACK_K = 0;
-int DEBUGGING = 0;  
+int DEBUGGING = 1;  
 /* 
 if (DEBUGGING){
 	printf("\n");
@@ -435,10 +435,15 @@ void declare_winner(void){
 
 // 																	******************* game phase functions ***********************
 move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
-	
+	if (DEBUGGING){
+		printf("in get_moves\n");
+		print_board(board);
+		fflush(stdout);
+	}
 	// initialize a move linked list:
 	move *moves = NULL; 
 	location *l;
+	move *disc_moves;
 	// find out who's turn it is
 	char man = is_white_turn ? WHITE_M : BLACK_M;
 	char king = is_white_turn ? WHITE_K : BLACK_K;
@@ -446,7 +451,7 @@ move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
 	for ( int i = 0; i < BOARD_SIZE; i++ ){
 		for ( int j = 0; j < BOARD_SIZE; j++ ){
 			if (  a_board[j][i] == man || a_board[j][i] == king ){
-				move *disc_moves;
+				disc_moves = NULL;
 				l = create_location(i,j);
 				disc_moves = get_disc_moves(a_board, l); // get the moves for the discs in this location
 				if (DEBUGGING){
@@ -454,6 +459,8 @@ move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
 					fflush(stdout);
 				}
 				moves = link_moves(moves,disc_moves); // concatenate the linked lists
+				free_location(l);//???
+				l = NULL;//??? 
 				
 			}
 		}
@@ -467,9 +474,9 @@ move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l){
 	if (DEBUGGING){
 		printf("******* get_disc_moves: <%c,%d> ********** \n",l->column+'a',l->row+1);
 		printf("is %c white disk: %d\n",a_board[l->column][l->row] ,IS_WHITE(disc));
-		printf("is cond0: %d\n",(l->row - 1 >= 0 && l->column + 1 <= BOARD_SIZE-1));
-		printf("is cond1: %d\n",!(same_color(a_board[l->column + 1][l->row - 1], disc)));
-		printf("is cond2: %d\n",a_board[l->column + 1][l->row - 1] == EMPTY);
+		printf("is cond0: %d\n",(l->row - 1 >= 0 && l->column - 1 <= BOARD_SIZE-1));
+		printf("is cond1: %d\n",!(same_color(a_board[l->column - 1][l->row - 1], disc)));
+		printf("is cond2: %d\n",a_board[l->column - 1][l->row - 1] == EMPTY);
 		printf("is cond3: %d\n",(!IS_WHITE(disc)));
 		print_board(a_board);
 		fflush(stdout);
@@ -593,10 +600,22 @@ move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l){
 			}
 		}
 		if ( (l->row - 1 >= 0 && l->column - 1  >= 0) ){ // location is inside the board (upper left)
-			if ( !(same_color(a_board[l->column - 1][l->row - 1], disc)) ){ // enemy or empty 
+			if ( !(same_color(a_board[l->column - 1][l->row - 1], disc)) ){ // enemy or empty
+				if (DEBUGGING){
+					printf("in get_disc_moves in the correct 'if' (-1,-1)(upper left)\n");
+					fflush(stdout);
+				}		
 				if ( a_board[l->column - 1][l->row - 1] == EMPTY ){
 					if ( !(IS_WHITE(disc)) ){
-						moves = link_moves(moves, create_move( l->row -1, l->column - 1));					
+						if (DEBUGGING){
+							printf("in get_disc_moves in the correct 'if' (-1,-1)(upper left)(just before link)\n");
+							fflush(stdout);
+						}
+						moves = link_moves(moves, create_move( l->row -1, l->column - 1));
+						if (DEBUGGING){
+							printf("in get_disc_moves in the correct 'if' (-1,-1)(upper left)(just AFTER link)\n");
+							fflush(stdout);
+						}								
 					}					
 				}
 				else { // enemy!!!
@@ -650,7 +669,7 @@ move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l){
 			}
 		}
 	}	
-	move * temp_move = moves;
+	move *temp_move = moves;
 	location *current_loc;
 	while(temp_move != NULL){
 		current_loc = create_location(l->row,l->column);
@@ -663,7 +682,7 @@ move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l){
 		print_all_moves(moves);
 		fflush(stdout);
 	}
-	free_location(l);
+	//free_location(l);
 	return moves;
 }
 
@@ -1082,7 +1101,7 @@ int main(){
 				//should be here???
 				if (parse_input_game(input)){ //'1' if user's input was wrong in some way, need another input
 					WHITE_TURN = (WHITE_TURN + 1)%2;
-				}
+				} 
 				/* else { //move is done ??? check if someone won???
 					
 				} */
