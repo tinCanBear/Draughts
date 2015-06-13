@@ -840,6 +840,28 @@ int is_legal_move(move* m){
 	free_move(moves);
 	return 0;
 }
+
+void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m){
+	char disc = a_board[m->step->column][m->step->row];
+	location *from = m->step;
+	location *to = m->step->next;
+	a_board[from->column][from->row] = EMPTY;
+	if ( m->eats == 0 ){
+		a_board[to->column][to->row] = disc;
+	}else{
+		int up;
+		int right;
+		while(to != NULL){
+			up = to->row > from->row ? 1 : -1;
+			right = to->column > from->column ? 1 : -1;
+			a_board[from->column][from->row] = EMPTY; //delete previous location 
+			a_board[to->column - right][to->row - up] = EMPTY; //delete eaten disc
+			a_board[to->column][to->row] = disc;
+			from = to;
+			to = from->next;
+		}
+	}
+}
 /* void parse_input_game(char* input){
 	//??? something??
 	char *words; // will be a copy of the input.
