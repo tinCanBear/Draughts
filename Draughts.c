@@ -115,22 +115,22 @@ move *create_move(int row, int column){
 }
 
 /** frees location (as a link list). */
-/* void free_location(location *l){
+void free_location(location *l){
 	if ( l != NULL ){
 		free_location(l->next);
 		free(l);
 	}
-} */
+}
 
 /** frees move (as a link list). */
-/* void free_move(move *m){
+void free_move(move *m){
 	if ( m != NULL ){
 		free_move(m->next);
 		free_location(m->step);
 		free(m);
 	}
 } 
- */
+
 //																		 *************** Board init & print methods ****************
 
 void print_line(){
@@ -665,7 +665,7 @@ move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l){
 		print_all_moves(moves);
 		fflush(stdout);
 	}
-	//free_location(l);
+	free_location(l);
 	return moves;
 }
 
@@ -736,7 +736,6 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 			}
 		}
 	}
-	//free_location(l);
 	if (moves == NULL){ // end of the recursion.
 		moves = create_move(-1, -1);// create empty move.
 	}
@@ -748,6 +747,7 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 		temp_move->step = current_loc;
 		temp_move = temp_move->next;
 	}
+	free_location(l);
 	return moves;
 	//
 	
@@ -783,12 +783,12 @@ move* link_moves(move *moves, move *disc_moves){
 	}
 	
 	if ( temp->eats < moves->eats ) { // moves are better, dump new moves 
-		//free_move(disc_moves); 
+		free_move(disc_moves); 
 		return moves;
 	}
 	
 	if ( temp->eats > moves->eats ) { // disc_moves is better, dump previous moves 
-		//free_move(moves); 
+		free_move(moves); 
 		moves = disc_moves; //???pointer still exists?....
 		return moves;
 	}
@@ -837,7 +837,7 @@ int is_legal_move(move* m){
 		}
 		temp_moves = temp_moves->next;
 	}
-	//free_move(moves);
+	free_move(moves);
 	return 0;
 }
 /* void parse_input_game(char* input){
