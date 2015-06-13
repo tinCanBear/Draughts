@@ -447,7 +447,7 @@ move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
 
 	for ( int i = 0; i < BOARD_SIZE; i++ ){
 		for ( int j = 0; j < BOARD_SIZE; j++ ){
-			if (  board[j][i] == man || board[j][i] == king ){
+			if (  a_board[j][i] == man || a_board[j][i] == king ){
 				move *disc_moves;
 				l = create_location(i,j);
 				disc_moves = get_disc_moves(a_board, l); // get the moves for the discs in this location
@@ -876,20 +876,65 @@ int test1(void){
 	return 1;
 }
 int test2(void){ // END THE GAME
+	printf("*************** test2 ******************\n");
+	printf("END THE GAME\n");
 	GAME = 0 ;
 	SETTINGS = 0;
 	return 1;
 }
 int test3(void){ //print settings
+	printf("*************** test3 ******************\n");
+	printf("print settings\n");
 	printf("MINIMAX_DEPTH = %d\n",MINIMAX_DEPTH);
 	printf("PLAYER_WHITE = %d\n",PLAYER_WHITE);
 	printf("WHITE_TURN = %d\n",WHITE_TURN);
 	return 1;
 }
-int test4(void){ //print all this turn moves + board
+int test4(void){ //print all first turn moves + board
+	printf("*************** test4 ******************\n");
 	print_board(board);
-	printf("WHITE_TURN = %d\n",WHITE_TURN);
+	printf("WHITE_TURN = %d\n",0);
 	move *moves = get_moves(board, 0);
+	printf("got moves! \n printing moves: \n");
+	fflush(stdout);
+	print_all_moves(moves);
+	//free_move(moves);
+	return 1;
+}
+int test5(void){ //print all moves(black) + board
+	printf("*************** test5 ******************\n");
+	char temp_board[BOARD_SIZE][BOARD_SIZE];
+	for (int i = 0; i < BOARD_SIZE; i++){
+		for ( int j = 0; j < BOARD_SIZE; j++){
+			temp_board[i][j] = EMPTY;
+		}
+	}
+	temp_board[6][0] = BLACK_K;
+	temp_board[9][1] = BLACK_M;
+	temp_board[8][2] = WHITE_M;
+	temp_board[8][4] = WHITE_M;
+	temp_board[8][6] = WHITE_M;
+	temp_board[8][8] = WHITE_M;
+	temp_board[6][6] = WHITE_M;
+	temp_board[4][4] = WHITE_M;
+	print_board(temp_board);
+	printf("WHITE_TURN = %d\n",0);
+	move *moves = get_moves(temp_board, 0);
+	printf("got moves! \n printing moves: \n");
+	fflush(stdout);
+	print_all_moves(moves);
+	//free_move(moves);
+	return 1;
+}
+int test6(void){ //print all moves(white) + board
+	printf("*************** test6 ******************\n");
+	char temp_board[BOARD_SIZE][BOARD_SIZE];
+	temp_board[6][6] = WHITE_K;
+	temp_board[4][4] = BLACK_M;
+	temp_board[3][3] = BLACK_M;
+	print_board(temp_board);
+	printf("WHITE_TURN = %d\n",1);
+	move *moves = get_moves(temp_board, 1);
 	printf("got moves! \n printing moves: \n");
 	fflush(stdout);
 	print_all_moves(moves);
