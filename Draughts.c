@@ -848,6 +848,8 @@ void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m){
 	a_board[from->column][from->row] = EMPTY;
 	if ( m->eats == 0 ){
 		a_board[to->column][to->row] = disc;
+		from = to;
+		to = from->next;
 	}else{
 		int up;
 		int right;
@@ -861,7 +863,14 @@ void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m){
 			to = from->next;
 		}
 	}
+	if ( (disc == BLACK_M) && (from->row == 0) ){
+		a_board[from->column][from->row] = BLACK_K;
+	}
+	else if( (disc == WHITE_M) && (from->row == 9) ){
+		a_board[from->column][from->row] = WHITE_K;
+	}
 }
+
 /* void parse_input_game(char* input){
 	//??? something??
 	char *words; // will be a copy of the input.
@@ -961,17 +970,17 @@ int test6(void){ //print all moves(black) + board
 			temp_board[i][j] = EMPTY;
 		}
 	}
-	temp_board[6][0] = BLACK_K;
-	temp_board[9][1] = BLACK_M;
-	temp_board[8][2] = WHITE_M;
-	temp_board[8][4] = WHITE_M;
-	temp_board[8][6] = WHITE_M;
-	temp_board[8][8] = WHITE_M;
-	temp_board[6][6] = WHITE_M;
-	temp_board[4][4] = WHITE_M;
+	//temp_board[6][0] = BLACK_K;
+	temp_board[9][1] = WHITE_M;
+	temp_board[8][2] = BLACK_M;
+	temp_board[8][4] = BLACK_M;
+	temp_board[8][6] = BLACK_M;
+	temp_board[8][8] = BLACK_M;
+	//temp_board[6][6] = BLACK_M;
+	temp_board[4][4] = BLACK_M;
 	print_board(temp_board);
-	printf("WHITE_TURN = %d\n",0);
-	move *moves = get_moves(temp_board, 0);
+	printf("WHITE_TURN = %d\n",1);
+	move *moves = get_moves(temp_board, 1);
 	printf("got moves! \n printing moves: \n");
 	fflush(stdout);
 	print_all_moves(moves);
