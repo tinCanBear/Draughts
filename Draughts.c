@@ -67,7 +67,7 @@ int NUM_WHITE_M = 0;
 int NUM_WHITE_K = 0;
 int NUM_BLACK_M = 0;
 int NUM_BLACK_K = 0;
-int DEBUGGING = 0;  
+int DEBUGGING = 1;  
 /* 
 if (DEBUGGING){
 	printf("\n");
@@ -609,6 +609,12 @@ move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l){
 						a_board_copy[l->column][l->row] = EMPTY; // remove disc from previous location
 						a_board_copy[l->column - 1][l->row - 1] = EMPTY; // remove enemy disc 
 						moves = link_moves(moves, get_eating_moves(l->row - 2, l->column  - 2, a_board_copy )); // 
+						if (DEBUGGING){
+							printf("print disc moves:");
+							print_all_moves(moves);
+							fflush(stdout);
+						}
+						
 					}	
 				}
 			}
@@ -747,6 +753,10 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 		current_loc->next = temp_move->step;
 		temp_move->step = current_loc;
 		temp_move = temp_move->next;
+	}
+	if (DEBUGGING){
+		print_all_moves(moves);
+		fflush(stdout);
 	}
 	return moves;	
 }
