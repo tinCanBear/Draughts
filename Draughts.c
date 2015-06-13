@@ -1015,7 +1015,7 @@ int main(){
 				// do something???
 			} */
 			test3();
-			test7();
+			test6();
 			test2();
 			
 			WHITE_TURN = (WHITE_TURN + 1)%2;
@@ -1027,6 +1027,5 @@ int main(){
 		}
 		free(input);
 	}
-	test1();
 	return 0;
 }
