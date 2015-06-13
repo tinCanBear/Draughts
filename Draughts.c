@@ -923,7 +923,11 @@ int test5(void){ //print all moves(black) + board
 	printf("got moves! \n printing moves: \n");
 	fflush(stdout);
 	print_all_moves(moves);
-	//free_move(moves);
+	printf("free moves: \n");
+	fflush(stdout);
+	free_move(moves);
+	printf("free is done! \n");
+	fflush(stdout);
 	return 1;
 }
 int test6(void){ //print all moves(white) + board
@@ -971,7 +975,7 @@ int main(){
 				// do something???
 			} */
 			test3();
-			test4();
+			test5();
 			test2();
 			
 			WHITE_TURN = (WHITE_TURN + 1)%2;
