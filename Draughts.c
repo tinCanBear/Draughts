@@ -115,22 +115,22 @@ move *create_move(int row, int column){
 }
 
 /** frees location (as a link list). */
-/* void free_location(location *l){
+void free_location(location *l){
 	if ( l != NULL ){
 		free_location(l->next);
 		free(l);
 	}
-} */
+} 
 
 /** frees move (as a link list). */
-/* void free_move(move *m){
+void free_move(move *m){
 	if ( m != NULL ){
 		free_move(m->next);
 		free_location(m->step);
 		free(m);
 	}
 } 
- */
+
 //																		 *************** Board init & print methods ****************
 
 void print_line(){
@@ -665,7 +665,7 @@ move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l){
 		print_all_moves(moves);
 		fflush(stdout);
 	}
-	//free_location(l);
+	free_location(l);
 	return moves;
 }
 
@@ -736,7 +736,7 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 			}
 		}
 	}
-	//free_location(l);
+	free_location(l);
 	if (moves == NULL){ // end of the recursion.
 		moves = create_move(-1, -1);// create empty move.
 	}
@@ -748,14 +748,9 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 		temp_move->step = current_loc;
 		temp_move = temp_move->next;
 	}
-	return moves;
-	//
-	
-	
-	
-	
-	
+	return moves;	
 }
+
 int same_color(char a, char b){
 	if ((a == EMPTY && b != EMPTY) || (b == EMPTY && a != EMPTY) ){
 		return 0;
@@ -783,12 +778,12 @@ move* link_moves(move *moves, move *disc_moves){
 	}
 	
 	if ( temp->eats < moves->eats ) { // moves are better, dump new moves 
-		//free_move(disc_moves); 
+		free_move(disc_moves); 
 		return moves;
 	}
 	
 	if ( temp->eats > moves->eats ) { // disc_moves is better, dump previous moves 
-		//free_move(moves); 
+		free_move(moves); 
 		moves = disc_moves; //???pointer still exists?....
 		return moves;
 	}
@@ -837,8 +832,30 @@ int is_legal_move(move* m){
 		}
 		temp_moves = temp_moves->next;
 	}
-	//free_move(moves);
+	free_move(moves);
 	return 0;
+}
+
+void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m){
+	char disc = a_board[m->step->column][m->step->row];
+	location *from = m->step;
+	location *to = m->step->next;
+	a_board[from->column][from->row] = EMPTY;
+	if ( m->eats == 0 ){
+		a_board[to->column][to->row] = disc;
+	}else{
+		int up;
+		int right;
+		while(to != NULL){
+			up = to->row > from->row ? 1 : -1;
+			right = to->column > from->column ? 1 : -1;
+			a_board[from->column][from->row] = EMPTY; //delete previous location 
+			a_board[to->column - right][to->row - up] = EMPTY; //delete eaten disc
+			a_board[to->column][to->row] = disc;
+			from = to;
+			to = from->next;
+		}
+	}
 }
 /* void parse_input_game(char* input){
 	//??? something??
@@ -923,7 +940,11 @@ int test5(void){ //print all moves(black) + board
 	printf("got moves! \n printing moves: \n");
 	fflush(stdout);
 	print_all_moves(moves);
-	//free_move(moves);
+	printf("free moves: \n");
+	fflush(stdout);
+	free_move(moves);
+	printf("free is done! \n");
+	fflush(stdout);
 	return 1;
 }
 int test6(void){ //print all moves(white) + board
@@ -935,12 +956,58 @@ int test6(void){ //print all moves(white) + board
 	print_board(temp_board);
 	printf("WHITE_TURN = %d\n",1);
 	move *moves = get_moves(temp_board, 1);
-	printf("got moves! \n printing moves: \n");
+	printf("got moves! \nprinting moves: \n");
 	fflush(stdout);
 	print_all_moves(moves);
 	//free_move(moves);
 	return 1;
 }
+int test7(void){ //free move
+	printf("*************** test7 ******************\n");
+	move * moves = create_move(1,9);
+	printf("moves created! \nprinting moves: \n");
+	fflush(stdout);
+	print_all_moves(moves);
+	printf("free moves: \n");
+	fflush(stdout);
+	free_move(moves);
+	printf("free is done! \n");
+	fflush(stdout);
+	return 1;
+}
+int test8(void){ //free move
+	printf("*************** test8 ******************\n");
+	char temp_board[BOARD_SIZE][BOARD_SIZE];
+	for (int i = 0; i < BOARD_SIZE; i++){
+		for ( int j = 0; j < BOARD_SIZE; j++){
+			temp_board[i][j] = EMPTY;
+		}
+	}
+	temp_board[6][0] = BLACK_K;
+	temp_board[9][1] = BLACK_M;
+	temp_board[8][2] = WHITE_M;
+	temp_board[8][4] = WHITE_M;
+	temp_board[8][6] = WHITE_M;
+	temp_board[8][8] = WHITE_M;
+	temp_board[6][6] = WHITE_M;
+	temp_board[4][4] = WHITE_M;
+	print_board(temp_board);
+	printf("WHITE_TURN = %d\n",0);
+	move *moves = get_moves(temp_board, 0);
+	printf("got moves! \n printing moves: \n");
+	fflush(stdout);
+	print_all_moves(moves);
+	printf("doing move! \n");
+	do_move(temp_board,moves);
+	print_board(temp_board);
+	printf("free moves: \n");
+	fflush(stdout);
+	free_move(moves);
+	printf("free is done! \n");
+	fflush(stdout);
+	return 1;
+}
+
 /** the main function. */
 int main(){
 	char *input;
@@ -971,7 +1038,7 @@ int main(){
 				// do something???
 			} */
 			test3();
-			test4();
+			test5();
 			test2();
 			
 			WHITE_TURN = (WHITE_TURN + 1)%2;
