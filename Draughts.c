@@ -92,6 +92,7 @@ location *create_location(int row, int column){
  
 	l->row = row;
 	l->column = column;
+	l->next = NULL;
 	return l;
 }
 
@@ -894,7 +895,7 @@ int parse_input_game(char* input){
 	word = strtok(words, " ");
 	// check if 'word' matches a legal (game) command: 
 	if ( strcmp(word, "move") == 0){
-		free(words);
+		//free(words);
 		move *user_move = create_move(-1,-1); // create empty move.
 		location *l = NULL;
 		location *last_l = NULL; 
@@ -966,13 +967,13 @@ int parse_input_game(char* input){
 	else if ( strcmp(word, "get_moves") == 0){
 		move *user_moves = get_moves(board, PLAYER_WHITE);
 		print_all_moves(user_moves);
-		free(words);
+		//free(words);
 		//free_move(user_moves);
 		return 1;
 	}
 	else { // 'word' doesn't match any legal (game) command 
 		print_message( ILLEGAL_COMMAND );
-		free(words);
+		//free(words);
 		return 1;
 	}
 }
@@ -1092,11 +1093,11 @@ int main(){
 			}
 			input = read_input();
 			if(strcmp(input,"\0") == 0){ // verify input isn't empty.
-				free(input);
+				//free(input);
 				continue;
 			}
 			if (strcmp(input, "quit") == 0){
-				free(input);
+				//free(input);
 				quit();
 			}
 		}
@@ -1132,10 +1133,10 @@ int main(){
 		}
 		if(!GAME && !SETTINGS){  // game's over
 			declare_winner();
-			free(input);
+			//free(input);
 			quit();
 		}
-		free(input);
+		//free(input);
 	}
 	return 0;
 }
