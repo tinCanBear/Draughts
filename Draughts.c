@@ -460,8 +460,8 @@ move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
 					fflush(stdout);
 				}
 				moves = link_moves(moves,disc_moves); // concatenate the linked lists
-				//free_location(l);//???
-				//l = NULL;//??? 
+				free_location(l);//???
+				l = NULL;//??? 
 				
 			}
 		}
@@ -765,7 +765,7 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 		temp_move->step = current_loc;
 		temp_move = temp_move->next;
 	}
-	//free_location(l);
+	free_location(l);
 	return moves;	
 }
 int same_color(char a, char b){
@@ -795,12 +795,12 @@ move* link_moves(move *moves, move *disc_moves){
 	}
 	
 	if ( temp->eats < moves->eats ) { // moves are better, dump new moves 
-		//free_move(disc_moves); 
+		free_move(disc_moves); 
 		return moves;
 	}
 	
 	if ( temp->eats > moves->eats ) { // disc_moves is better, dump previous moves 
-		//free_move(moves); 
+		free_move(moves); 
 		moves = disc_moves; //???pointer still exists?....
 		return moves;
 	}
@@ -849,7 +849,7 @@ int is_legal_move(move* m){
 		}
 		temp_moves = temp_moves->next;
 	}
-	//free_move(moves);
+	free_move(moves);
 	return 0;
 }
 
@@ -895,7 +895,7 @@ int parse_input_game(char* input){
 	word = strtok(words, " ");
 	// check if 'word' matches a legal (game) command: 
 	if ( strcmp(word, "move") == 0){
-		//free(words);
+		free(words);
 		move *user_move = create_move(-1,-1); // create empty move.
 		location *l = NULL;
 		location *last_l = NULL; 
@@ -920,7 +920,7 @@ int parse_input_game(char* input){
 				}
 				if (l != NULL && !is_legal_location(*l)){
 					print_message(WRONG_POSITION);
-					//free_move(user_move);
+					free_move(user_move);
 					return 1;
 				}
 			}
@@ -931,12 +931,12 @@ int parse_input_game(char* input){
 			char disc = board[user_move->step->column][user_move->step->row];
 			if (PLAYER_WHITE && ((disc == BLACK_K) || (disc == BLACK_M) || (disc == EMPTY))){
 				print_message(NO_DICS);
-				//free_move(user_move);
+				free_move(user_move);
 				return 1;
 			}
 			if ((!PLAYER_WHITE) && ((disc == WHITE_K) || (disc == WHITE_M) || (disc == EMPTY))){
 				print_message(NO_DICS);
-				//free_move(user_move);
+				free_move(user_move);
 				return 1;
 			}			
 		}
@@ -954,26 +954,26 @@ int parse_input_game(char* input){
 				user_move->eats = 1;
 			}
 			do_move(board, user_move);
-			//free_move(user_move);
+			free_move(user_move);
 			return 0;
 		}
 		else{ // move is illegal
 			print_message(ILLEGAL_MOVE);
 			print_move(user_move);
-			//free_move(user_move);
+			free_move(user_move);
 			return 1;			
 		}
 	}
 	else if ( strcmp(word, "get_moves") == 0){
 		move *user_moves = get_moves(board, PLAYER_WHITE);
 		print_all_moves(user_moves);
-		//free(words);
-		//free_move(user_moves);
+		free(words);
+		free_move(user_moves);
 		return 1;
 	}
 	else { // 'word' doesn't match any legal (game) command 
 		print_message( ILLEGAL_COMMAND );
-		//free(words);
+		free(words);
 		return 1;
 	}
 }
@@ -1093,11 +1093,11 @@ int main(){
 			}
 			input = read_input();
 			if(strcmp(input,"\0") == 0){ // verify input isn't empty.
-				//free(input);
+				free(input);
 				continue;
 			}
 			if (strcmp(input, "quit") == 0){
-				//free(input);
+				free(input);
 				quit();
 			}
 		}
@@ -1128,15 +1128,17 @@ int main(){
 				GAME = 0;
 			}else{
 				print_message("game's not over?1!\n")
-				//free_move(m);
+				free_move(m);
 			}
 		}
 		if(!GAME && !SETTINGS){  // game's over
 			declare_winner();
-			//free(input);
+			free(input);
 			quit();
 		}
-		//free(input);
+		if ( (PLAYER_WHITE && WHITE_TURN) || (!PLAYER_WHITE && !WHITE_TURN)  || (SETTINGS)){
+		free(input);
+		}
 	}
 	return 0;
 }
