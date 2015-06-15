@@ -698,6 +698,13 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 	location *current_loc;
 	location *l = create_location(row,column);
 	char disc = a_board[l->column][l->row];
+	
+	if ( (disc == BLACK_M && row == 0) || (disc == WHITE_M && row == BOARD_SIZE-1) ){ // end of the recursion( men--->king ).
+		moves = create_move(-1, -1);
+		moves->step = l;
+		moves->eats++;
+		return moves;
+	}
 	if ( (l->row - 1 >= 0 && l->column + 1 <= BOARD_SIZE-1) ){ // location is inside the board (upper right)
 		if ( !(same_color(a_board[l->column + 1][l->row - 1], disc)) ){ // enemy or empty 
 			if ( !(a_board[l->column + 1][l->row - 1] == EMPTY) ){ // enemy!!!
@@ -754,7 +761,7 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 			}
 		}
 	}
-	if (moves == NULL){ // end of the recursion.
+	if (moves == NULL){ // end of the recursion, can't eat.
 		moves = create_move(-1, -1);// create empty move.
 	}
 	temp_move = moves;
@@ -1119,6 +1126,7 @@ int main(){
 				print_message("****computer's turn***");//???
 				move *comp_moves = get_moves(board, WHITE_TURN);// do something???
 				do_move(board, comp_moves);
+				free_move(comp_moves);
 			}  
 			WHITE_TURN = (WHITE_TURN + 1)%2;
 			move *m = get_moves(board,WHITE_TURN);
