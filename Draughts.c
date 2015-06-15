@@ -54,6 +54,7 @@ int parse_input_game(char* input); //similar to that of the settings phase.
 //Define macros:
 
 #define IS_WHITE(x) (((x) == (WHITE_K))||((x) == (WHITE_M)))
+#define IS_BLACK(x) (((x) == (BLACK_K))||((x) == (BLACK_M)))
 #define IS_KING(x) (((x) == (WHITE_K))||((x) == (BLACK_K)))
 int MINIMAX_DEPTH = 1;
 int GAME = 0;
@@ -986,7 +987,128 @@ int parse_input_game(char* input){
 	}
 }
  
-
+int score_borde(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
+	int black_score = 0;
+	int white_score = 0;
+	int white_can_move = 0;
+	int black_can_move = 0;
+	for( int i = 0 ; i < BOARD_SIZE ; i++ ){
+		for( int j = 0 ; j < BOARD_SIZE ; j++ ){
+			if ( a_board[i][j] != EMPTY ){
+				if(a_board[i][j] == BLACK_M){
+					black_score++;
+				}
+				if(a_board[i][j] == BLACK_K){
+					black_score == black_score + 3;
+				}
+				if(a_board[i][j] == WHITE_M){
+					white_score++;
+				}
+				if(a_board[i][j] == WHITE_K){
+					white_score == white_score + 3;
+				}
+				if( i+1 < BOARD_SIZE && j+1 < BOARD_SIZE ){
+					if(a_board[i+1][j+1] == EMPTY ){
+						if(IS_WHITE(a_board[i][j])){
+							white_can_move = 1;
+						}
+						if( a_board[i][j] == BLACK_K){
+							black_can_move = 1;
+						}
+					}
+					else{
+						if( i+2 < BOARD_SIZE && j+2 < BOARD_SIZE ){
+							if(a_board[i+2][j+2] == EMPTY){
+								if(IS_WHITE(a_board[i][j]) && IS_BLACK(a_board[i+1][j+1])){
+									white_can_move = 1;
+								}
+								if(IS_WHITE(a_board[i+1][j+1]) && IS_BLACK(a_board[i][j])){
+									black_can_move = 1;
+								}
+							}
+						}
+					}
+				}
+				if ( i-1 > 0 && j+1 < BOARD_SIZE ){
+					if(a_board[i-1][j+1] == EMPTY ){
+						if(IS_WHITE(a_board[i][j])){
+							white_can_move = 1;
+						}
+						if( a_board[i][j] == BLACK_K){
+							black_can_move = 1;
+						}
+					}
+					else{
+						if( i-2 > 0 && j+2 < BOARD_SIZE ){
+							if(a_board[i-2][j+2] == EMPTY){
+								if(IS_WHITE(a_board[i][j]) && IS_BLACK(a_board[i-1][j+1])){
+									white_can_move = 1;
+								}
+								if(IS_WHITE(a_board[i-1][j+1]) && IS_BLACK(a_board[i][j])){
+									black_can_move = 1;
+								}
+							}
+						}
+					}
+				}
+				if ( i+1 < BOARD_SIZE && j-1 > 0 ){
+					if(a_board[i+1][j-1] == EMPTY ){
+						if(IS_BLACK(a_board[i][j])){
+							black_can_move = 1;
+						}
+						if( a_board[i][j] == WHITE_K){
+							white_can_move = 1;
+						}
+					}
+					else{
+						if( i+2 < BOARD_SIZE && j-2 > 0 ){
+							if(a_board[i+2][j-2] == EMPTY){
+								if(IS_WHITE(a_board[i][j]) && IS_BLACK(a_board[i+1][j-1])){
+									white_can_move = 1;
+								}
+								if(IS_WHITE(a_board[i+1][j-1]) && IS_BLACK(a_board[i][j])){
+									black_can_move = 1;
+								}
+							}
+						}
+					}
+				}
+				if ( i-1 > 0 && j-1 > 0 ){
+					if(a_board[i-1][j-1] == EMPTY ){
+						if(IS_BLACK(a_board[i][j])){
+							black_can_move = 1;
+						}
+						if( a_board[i][j] == WHITE_K){
+							white_can_move = 1;
+						}
+					}
+					else{
+						if( i-2 > 0 && j-2 < 0 ){
+							if(a_board[i-2][j-2] == EMPTY){
+								if(IS_WHITE(a_board[i][j]) && IS_BLACK(a_board[i-1][j-1])){
+									white_can_move = 1;
+								}
+								if(IS_WHITE(a_board[i-1][j-1]) && IS_BLACK(a_board[i][j])){
+									black_can_move = 1;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if( ((!white_can_move) && white_player) || ((!black_can_move) && (!white_player)) ){
+		return -100;
+	}
+	if( ((!black_can_move) && white_player) || ((!white_can_move) && (!white_player)) ) {
+		return 100;
+	}
+	if( white_player ){
+		return white_score - black_score;
+	}
+	return black_score - white_score;
+}
 
 
 // 																		*********************** tests ************************
@@ -1130,14 +1252,14 @@ int main(){
 				free_move(comp_moves);
 			}  
 			WHITE_TURN = (WHITE_TURN + 1)%2;
-			move *m = get_moves(board,WHITE_TURN);
+			//move *m = get_moves(board,WHITE_TURN);
 			print_board(board);
-			if( m == NULL){
+			if( score_borde(board,WHITE_TURN) == -100){
 				print_message("game's over\n");
 				GAME = 0;
 			}else{
 				print_message("game's not over?1!\n")
-				free_move(m);
+				//free_move(m);
 			}
 		}
 		if(!GAME && !SETTINGS){  // game's over
