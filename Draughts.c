@@ -852,6 +852,7 @@ int is_legal_move(move* m){
 			temp_loc2 = temp_loc2->next;
 		}
 		if (temp_loc1 == NULL  && temp_loc2 == NULL){ // the user move is the same as a legal move
+			free_move(moves);
 			return 1;
 		}
 		temp_moves = temp_moves->next;
@@ -966,15 +967,15 @@ int parse_input_game(char* input){
 		}
 		else{ // move is illegal
 			print_message(ILLEGAL_MOVE);
-			print_move(user_move);
+			print_move(user_move); // ???
 			free_move(user_move);
 			return 1;			
 		}
 	}
 	else if ( strcmp(word, "get_moves") == 0){
+		free(words);
 		move *user_moves = get_moves(board, PLAYER_WHITE);
 		print_all_moves(user_moves);
-		free(words);
 		free_move(user_moves);
 		return 1;
 	}
