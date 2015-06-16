@@ -987,7 +987,7 @@ int parse_input_game(char* input){
 	}
 }
  
-int score_borde(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
+int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 	int black_score = 0;
 	int white_score = 0;
 	int white_can_move = 0;
@@ -1110,6 +1110,87 @@ int score_borde(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 	return black_score - white_score;
 }
 
+int minmax(char a_board[BOARD_SIZE][BOARD_SIZE], int maxi, int depth){
+	int color = maxi ? !PLAYER_WHITE : PLAYER_WHITE;
+	move *moves;
+	move *temp = NULL;
+	int mini_score = 101;
+	int maxi_score = -101;
+	
+	// recursion ends
+	if (depth == 1){
+		return score_board(a_board, color);
+	}
+	moves = get_moves(a_board, !color);	//get the moves of the other player
+	if (moves == NULL){
+		return 100;
+	}
+	
+	temp = moves;	//initialize temp
+	
+	while ( temp != NULL ){
+		int temp_score;
+		char board_copy[BOARD_SIZE][BOARD_SIZE];
+		memcpy(board_copy, a_board, sizeof(board_copy));
+		do_move(board_copy, temp); // now the board copy is updated 
+		temp_score = minmax(board_copy, !maxi, depth-1);
+		if ( maxi ){
+			if ( temp_score > maxi_score ){
+				maxi_score = temp_score;
+			}
+		}
+		else{
+			if ( temp_score < mini_score ){
+				mini_score = temp_score;
+			}			
+		}
+		temp = temp->next;
+	}
+	free_move(moves);
+	if ( maxi ){
+		return maxi_score;
+	}
+	else{
+		return mini_score;
+	}
+}
+
+move *get_move_minmax(void){
+	move *moves = get_moves(board, WHITE_TURN); // our options.
+	move *max_move = NULL;
+	move *prev_max_move = NULL;
+	move *temp = moves;
+	move *prev_temp = NULL;
+	int max_score = -101;
+	int current_score;
+	char board_copy[BOARD_SIZE][BOARD_SIZE];
+
+	while ( temp != NULL ){
+		
+		// copy the board
+		memcpy(board_copy, board, sizeof(board_copy));
+		
+		//do move 
+		do_move(board_copy, temp); // now the board copy is updated 
+
+		// get score for the move, using minmax
+		current_score = minmax(board_copy, 1, MINIMAX_DEPTH);
+		
+		// update max if necessary 
+		if ( current_score > max_score ){
+			max_score = current_score;
+			max_move = temp;
+			prev_max_move = temp_prev;
+		}
+		temp_prev = temp;
+		temp = temp->next;
+	}
+	if (prev_max_move != NULL){
+		prev_max_move->next = NULL;
+		free_move(moves);
+	}
+	return max_move;
+}
 
 // 																		*********************** tests ************************
 int test1(void){
@@ -1175,7 +1256,6 @@ int test5(void){ //print all moves(black) + board
 	fflush(stdout);
 	return 1;
 }
-
 int test6(void){ //print all moves(black) + board
 	printf("*************** test6 ******************\n");
 	char temp_board[BOARD_SIZE][BOARD_SIZE];
@@ -1212,6 +1292,7 @@ int test6(void){ //print all moves(black) + board
 int main(){
 	int repeat = 0;
 	char *input;
+	move *comp_move;
 	init_board(board);
 	printf("%s",WELCOME_TO_DRAUGHTS);
 
@@ -1237,33 +1318,25 @@ int main(){
 		}
 		else if(GAME){ // game time
  			if ( (PLAYER_WHITE && WHITE_TURN) || (!PLAYER_WHITE && !WHITE_TURN) ){ //user's turn???maybe make different logic. 
-				//should be here???
 				if ( (repeat = parse_input_game(input)) ){ //'1' if user's input was wrong in some way, need another input
 					WHITE_TURN = (WHITE_TURN + 1)%2;
-					//print_message("****turn's over*****");
 				} 
-				/* else { //move is done ??? check if someone won???
-					
-				} */
 			}
 			else { // computer's turn
-				//print_message("****computer's turn***");//???
-				move *comp_moves = get_moves(board, WHITE_TURN);// do something???
-				do_move(board, comp_moves);
+				comp_move = get_moves(board, WHITE_TURN);// do something???
+				//comp_move = get_move_minmax(board, 1, MINIMAX_DEPTH);
+				do_move(board, comp_move);
 				printf("Computer: move ");
-				print_move(comp_moves);
-				free_move(comp_moves);
+				print_move(comp_move);
+				free_move(comp_move);
 			}  
 			WHITE_TURN = (WHITE_TURN + 1)%2;
-			//move *m = get_moves(board,WHITE_TURN);
 			if(!repeat){
 				print_board(board);
 			}
-			if( score_borde(board,WHITE_TURN) == -100){
+			if( score_board(board,WHITE_TURN) == -100){
 				GAME = 0;
-			}/* else{
-				free_move(m);
-			} */
+			}
 		}
 		if(!GAME && !SETTINGS){  // game's over
 			declare_winner();
