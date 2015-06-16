@@ -67,6 +67,7 @@ int NUM_WHITE_K = 0;
 int NUM_BLACK_M = 0;
 int NUM_BLACK_K = 0;
 int DEBUGGING = 0;  
+int DEBUGGING2 = 0;
 /* 
 if (DEBUGGING){
 	printf("\n");
@@ -1029,7 +1030,7 @@ int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 						}
 					}
 				}
-				if ( i-1 > 0 && j+1 < BOARD_SIZE ){
+				if ( i-1 >= 0 && j+1 < BOARD_SIZE ){
 					if(a_board[i-1][j+1] == EMPTY ){
 						if(IS_WHITE(a_board[i][j])){
 							white_can_move = 1;
@@ -1039,7 +1040,7 @@ int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 						}
 					}
 					else{
-						if( i-2 > 0 && j+2 < BOARD_SIZE ){
+						if( i-2 >= 0 && j+2 < BOARD_SIZE ){
 							if(a_board[i-2][j+2] == EMPTY){
 								if(IS_WHITE(a_board[i][j]) && IS_BLACK(a_board[i-1][j+1])){
 									white_can_move = 1;
@@ -1051,7 +1052,7 @@ int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 						}
 					}
 				}
-				if ( i+1 < BOARD_SIZE && j-1 > 0 ){
+				if ( i+1 < BOARD_SIZE && j-1 >= 0 ){
 					if(a_board[i+1][j-1] == EMPTY ){
 						if(IS_BLACK(a_board[i][j])){
 							black_can_move = 1;
@@ -1061,7 +1062,7 @@ int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 						}
 					}
 					else{
-						if( i+2 < BOARD_SIZE && j-2 > 0 ){
+						if( i+2 < BOARD_SIZE && j-2 >= 0 ){
 							if(a_board[i+2][j-2] == EMPTY){
 								if(IS_WHITE(a_board[i][j]) && IS_BLACK(a_board[i+1][j-1])){
 									white_can_move = 1;
@@ -1073,7 +1074,7 @@ int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 						}
 					}
 				}
-				if ( i-1 > 0 && j-1 > 0 ){
+				if ( i-1 >= 0 && j-1 >= 0 ){
 					if(a_board[i-1][j-1] == EMPTY ){
 						if(IS_BLACK(a_board[i][j])){
 							black_can_move = 1;
@@ -1083,7 +1084,7 @@ int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 						}
 					}
 					else{
-						if( i-2 > 0 && j-2 < 0 ){
+						if( i-2 >= 0 && j-2 >= 0 ){
 							if(a_board[i-2][j-2] == EMPTY){
 								if(IS_WHITE(a_board[i][j]) && IS_BLACK(a_board[i-1][j-1])){
 									white_can_move = 1;
@@ -1111,43 +1112,43 @@ int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 }
 
 int minmax(char a_board[BOARD_SIZE][BOARD_SIZE], int maxi, int depth){
-	int color = maxi ? !PLAYER_WHITE : PLAYER_WHITE;
-	move *moves;
+	
+	int next_color = maxi ? PLAYER_WHITE : !PLAYER_WHITE;
+	move *moves = NULL;
 	move *temp = NULL;
 	int mini_score = 101;
 	int maxi_score = -101;
-	
 	// recursion ends
-	if (depth == 1){
-		return score_board(a_board, color);
+	if (depth == MINIMAX_DEPTH){
+		return score_board(a_board, !PLAYER_WHITE);
 	}
-	moves = get_moves(a_board, !color);	//get the moves of the other player
-	if (moves == NULL){
-		return 100;
+	moves = get_moves(a_board, next_color);	//get the moves of the other player
+	if ( moves == NULL ){
+		if(maxi){
+			return 100;
+		}
+		else{
+			return -100;
+		}
 	}
-	
 	temp = moves;	//initialize temp
-	
 	while ( temp != NULL ){
 		int temp_score;
 		char board_copy[BOARD_SIZE][BOARD_SIZE];
 		memcpy(board_copy, a_board, sizeof(board_copy));
 		do_move(board_copy, temp); // now the board copy is updated 
-		temp_score = minmax(board_copy, !maxi, depth-1);
-		if ( maxi ){
-			if ( temp_score > maxi_score ){
-				maxi_score = temp_score;
-			}
+		temp_score = minmax(board_copy, !maxi, depth+1);
+		
+		if ( temp_score > maxi_score ){
+			maxi_score = temp_score;
 		}
-		else{
-			if ( temp_score < mini_score ){
-				mini_score = temp_score;
-			}			
+		if ( temp_score < mini_score ){
+			mini_score = temp_score;
 		}
 		temp = temp->next;
 	}
 	free_move(moves);
-	if ( maxi ){
+	if ( !maxi ){
 		return maxi_score;
 	}
 	else{
@@ -1174,15 +1175,23 @@ move *get_move_minmax(void){
 		do_move(board_copy, temp); // now the board copy is updated 
 
 		// get score for the move, using minmax
-		current_score = minmax(board_copy, 1, MINIMAX_DEPTH);
+		current_score = minmax(board_copy, 1, 1);
 		
 		// update max if necessary 
 		if ( current_score > max_score ){
 			max_score = current_score;
 			max_move = temp;
-			prev_max_move = temp_prev;
+			prev_max_move = prev_temp;
 		}
-		temp_prev = temp;
+		if(DEBUGGING2){
+				printf("check move :\n");
+				print_move(temp);
+				print_board(board_copy);
+				printf("current_score: %d\n",current_score );
+				printf("max_score: %d\n",max_score );
+				fflush(stdout);
+		}
+		prev_temp = temp;
 		temp = temp->next;
 	}
 	if (prev_max_move != NULL){
@@ -1288,6 +1297,8 @@ int test6(void){ //print all moves(black) + board
 	fflush(stdout);
 	return 1;
 }
+
+
 /** the main function. */
 int main(){
 	int repeat = 0;
@@ -1317,14 +1328,13 @@ int main(){
 			parse_input_settings(input);
 		}
 		else if(GAME){ // game time
- 			if ( (PLAYER_WHITE && WHITE_TURN) || (!PLAYER_WHITE && !WHITE_TURN) ){ //user's turn???maybe make different logic. 
+ 			if ( (PLAYER_WHITE && WHITE_TURN) || (!PLAYER_WHITE && !WHITE_TURN) ){ //user's turn 
 				if ( (repeat = parse_input_game(input)) ){ //'1' if user's input was wrong in some way, need another input
 					WHITE_TURN = (WHITE_TURN + 1)%2;
 				} 
 			}
 			else { // computer's turn
-				comp_move = get_moves(board, WHITE_TURN);// do something???
-				//comp_move = get_move_minmax(board, 1, MINIMAX_DEPTH);
+				comp_move = get_move_minmax();
 				do_move(board, comp_move);
 				printf("Computer: move ");
 				print_move(comp_move);
@@ -1334,11 +1344,11 @@ int main(){
 			if(!repeat){
 				print_board(board);
 			}
-			if( score_board(board,WHITE_TURN) == -100){
+			if( score_board(board,WHITE_TURN) == -100){ // game's over
 				GAME = 0;
 			}
 		}
-		if(!GAME && !SETTINGS){  // game's over
+		if(!GAME && !SETTINGS){  // end the game
 			declare_winner();
 			free(input);
 			quit();
