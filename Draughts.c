@@ -999,13 +999,13 @@ int score_borde(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 					black_score++;
 				}
 				if(a_board[i][j] == BLACK_K){
-					black_score == black_score + 3;
+					black_score = black_score + 3;
 				}
 				if(a_board[i][j] == WHITE_M){
 					white_score++;
 				}
 				if(a_board[i][j] == WHITE_K){
-					white_score == white_score + 3;
+					white_score = white_score + 3;
 				}
 				if( i+1 < BOARD_SIZE && j+1 < BOARD_SIZE ){
 					if(a_board[i+1][j+1] == EMPTY ){
@@ -1210,6 +1210,7 @@ int test6(void){ //print all moves(black) + board
 }
 /** the main function. */
 int main(){
+	int repeat = 0;
 	char *input;
 	init_board(board);
 	printf("%s",WELCOME_TO_DRAUGHTS);
@@ -1237,30 +1238,32 @@ int main(){
 		else if(GAME){ // game time
  			if ( (PLAYER_WHITE && WHITE_TURN) || (!PLAYER_WHITE && !WHITE_TURN) ){ //user's turn???maybe make different logic. 
 				//should be here???
-				if (parse_input_game(input)){ //'1' if user's input was wrong in some way, need another input
+				if ( (repeat = parse_input_game(input)) ){ //'1' if user's input was wrong in some way, need another input
 					WHITE_TURN = (WHITE_TURN + 1)%2;
-					print_message("****turn's over*****");
+					//print_message("****turn's over*****");
 				} 
 				/* else { //move is done ??? check if someone won???
 					
 				} */
 			}
 			else { // computer's turn
-				print_message("****computer's turn***");//???
+				//print_message("****computer's turn***");//???
 				move *comp_moves = get_moves(board, WHITE_TURN);// do something???
 				do_move(board, comp_moves);
+				printf("Computer: move ");
+				print_move(comp_moves);
 				free_move(comp_moves);
 			}  
 			WHITE_TURN = (WHITE_TURN + 1)%2;
 			//move *m = get_moves(board,WHITE_TURN);
-			print_board(board);
-			if( score_borde(board,WHITE_TURN) == -100){
-				print_message("game's over\n");
-				GAME = 0;
-			}else{
-				print_message("game's not over?1!\n")
-				//free_move(m);
+			if(!repeat){
+				print_board(board);
 			}
+			if( score_borde(board,WHITE_TURN) == -100){
+				GAME = 0;
+			}/* else{
+				free_move(m);
+			} */
 		}
 		if(!GAME && !SETTINGS){  // game's over
 			declare_winner();
@@ -1268,7 +1271,7 @@ int main(){
 			quit();
 		}
 		if ( (PLAYER_WHITE && WHITE_TURN) || (!PLAYER_WHITE && !WHITE_TURN)  || (SETTINGS)){
-		free(input);
+			free(input);
 		}
 	}
 	return 0;
