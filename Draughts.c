@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-
 // infrastructure
 
 struct location_st   //define a location 
@@ -12,8 +11,6 @@ struct location_st   //define a location
   struct location_st *next; //linked list implementation
 };
 
-typedef struct location_st location;
-
 struct move_st   //define a move
 {
   int eats; //how good is this move 
@@ -21,14 +18,6 @@ struct move_st   //define a move
   struct move_st *next;	//linked list of moves
 };
 
-typedef struct move_st move;
-
-
-//Define macros:
-
-#define IS_WHITE(x) (((x) == (WHITE_K))||((x) == (WHITE_M)))
-#define IS_BLACK(x) (((x) == (BLACK_K))||((x) == (BLACK_M)))
-#define IS_KING(x) (((x) == (WHITE_K))||((x) == (BLACK_K)))
 int MINIMAX_DEPTH = 1;
 int GAME = 0;
 int SETTINGS = 1;
@@ -41,13 +30,7 @@ int NUM_BLACK_M = 0;
 int NUM_BLACK_K = 0;
 int DEBUGGING = 0;  
 int DEBUGGING2 = 0;
-/* 
-if (DEBUGGING){
-	printf("\n");
-	print_all_moves(moves);
-	fflush(stdout);
-}
- */
+
 // 																		*************** General methods ****************
 
 void quit(void){

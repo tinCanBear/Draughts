@@ -12,6 +12,10 @@
 
 #define BOARD_SIZE 10
 
+#define IS_WHITE(x) (((x) == (WHITE_K))||((x) == (WHITE_M)))
+#define IS_BLACK(x) (((x) == (BLACK_K))||((x) == (BLACK_M)))
+#define IS_KING(x) (((x) == (WHITE_K))||((x) == (BLACK_K)))
+
 typedef char** board_t;
 #define WELCOME_TO_DRAUGHTS "Welcome to Draughts!\n"
 #define ENTER_SETTINGS "Enter game settings:\n" 
@@ -26,7 +30,10 @@ typedef char** board_t;
 #define perror_message(func_name) (fprintf(stderr, "Error: standard function %s has failed\n", func_name))
 #define print_message(message) (printf("%s", message));
 
-
+struct location_st;
+typedef struct location_st location;
+struct move_st;
+typedef struct move_st move; 
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE]);
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
@@ -57,6 +64,7 @@ void print_move(move *m);
 void print_all_moves(move *m);
 int is_legal_move(move* m);
 int parse_input_game(char* input); 
- 
+
+
 
 #endif  
