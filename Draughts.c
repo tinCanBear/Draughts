@@ -23,33 +23,6 @@ struct move_st   //define a move
 
 typedef struct move_st move;
 
-// functions headers
-
-void set_minmax_depth(int x);
-void set_user_color(char *s);
-void quit(void);
-void clear(void);
-void remove_location(location l);
-int is_legal_location(location l);
-void set_location(location l, int white, int man);
-void quit_allcation_error(void);
-void start_game(void);
-char* read_input(void);
-void parse_input_settings(char* input);
-int check_settings(void);
-location str_to_location(char* locus);
-void declare_winner(void);
-move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l);
-move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn); // all the available moves
-move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]);
-move* link_moves(move *moves, move *disc_moves);
-int same_color(char a, char b);
-void print_move(move *m);
-void print_all_moves(move *m);
-int is_legal_move(move* m);// will check if move is legal
-int parse_input_game(char* input); //similar to that of the settings phase.
- 
-
 
 //Define macros:
 
@@ -437,6 +410,9 @@ void declare_winner(void){
 }
 
 // 																	******************* game phase functions ***********************
+
+/** returns a linked list of moves comprising
+ * all available legal moves of the given player. */
 move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
 	if (DEBUGGING){
 		printf("in get_moves\n");
@@ -471,6 +447,7 @@ move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
 	return moves;
 }
 
+/**  returns a move pointer which is the entire move for the disc in location l. */
 move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l){
 	char disc = a_board[l->column][l->row];
 	move *moves = NULL;
@@ -689,6 +666,7 @@ move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l){
 	return moves;
 }
 
+/** a recursive function. returns a move which begins after the first eat.*/
 move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]){
 	if (DEBUGGING){
 		printf("******* get_eating_moves: <%c,%d> ********** \n",column+'a',row+1);
@@ -777,6 +755,9 @@ move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]
 	free_location(l);
 	return moves;	
 }
+
+/** returns '1' if a is the same colour as b (EMPTY doesn't count),
+  * '0' otherwise. */
 int same_color(char a, char b){
 	if ((a == EMPTY && b != EMPTY) || (b == EMPTY && a != EMPTY) ){
 		return 0;
@@ -787,7 +768,8 @@ int same_color(char a, char b){
 	return 0;
 }
 
-
+/** links disc_moves to moves.
+  * (linked list).*/
 move* link_moves(move *moves, move *disc_moves){
 	move *temp = disc_moves;
 	if ( moves == NULL  && disc_moves == NULL ){
@@ -822,6 +804,8 @@ move* link_moves(move *moves, move *disc_moves){
 	return moves;
 }
 
+/** prints a single move;
+  * all associated locations.*/ 
 void print_move(move *m){
 	location *temp = m->step;
 	printf("<%c,%d> to ",(temp->column+'a'),temp->row+1);
@@ -831,6 +815,7 @@ void print_move(move *m){
 	printf("\n");
 }
 
+/** prints all  moves within m.*/ 
 void print_all_moves(move *m){
 	while(m != NULL){
 		print_move(m);
@@ -838,6 +823,8 @@ void print_all_moves(move *m){
 	}
 }
 
+/** return '1' of m is a legal move,
+  * '0' otherwise. */
 int is_legal_move(move* m){
 	location *temp_loc1; //  pointer for the pattern moves
 	location *temp_loc2; // pointer for the user move
@@ -863,6 +850,7 @@ int is_legal_move(move* m){
 	return 0;
 }
 
+/** perfomes all the steps in move *m on a_board.*/ 
 void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m){
 	char disc = a_board[m->step->column][m->step->row];
 	location *from = m->step;
@@ -893,6 +881,10 @@ void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m){
 	}
 }
 
+/** returns an int '1' or '0'. '1' if user's input is wrong
+  * in some way that requires another input receiving
+  * and turn skipping. the function receives the input char*
+  * and assumes "game phase" type commands. */
 int parse_input_game(char* input){
 	//??? something??
 	char *words; // will be a copy of the input.
@@ -988,6 +980,8 @@ int parse_input_game(char* input){
 	}
 }
  
+ /** returns an int which is the score of the current board with
+   * accordance to the white_player (which player to calculate the score). */
 int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 	int black_score = 0;
 	int white_score = 0;
@@ -1111,6 +1105,10 @@ int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player){
 	return black_score - white_score;
 }
 
+/** returns an int representing the score for for the previously
+  * executed move (that caused the a_board configuration),
+  * according to the scoring function and depending on the depth.
+  * this is a recursive function. */
 int minmax(char a_board[BOARD_SIZE][BOARD_SIZE], int maxi, int depth){
 	
 	int next_color = maxi ? PLAYER_WHITE : !PLAYER_WHITE;
@@ -1156,6 +1154,8 @@ int minmax(char a_board[BOARD_SIZE][BOARD_SIZE], int maxi, int depth){
 	}
 }
 
+/** returns the max score move for the computer's turn.
+  * uses calls to minmax (recursive function). */
 move *get_move_minmax(void){
 	move *moves = get_moves(board, WHITE_TURN); // our options.
 	move *max_move = NULL;
@@ -1200,104 +1200,6 @@ move *get_move_minmax(void){
 	}
 	return max_move;
 }
-
-// 																		*********************** tests ************************
-int test1(void){
-	char temp_board[BOARD_SIZE][BOARD_SIZE];
-	init_board(temp_board);
-	print_board(temp_board);
-	print_message(WRONG_MINIMAX_DEPTH);
-	perror_message("TEST 1");
-	return 1;
-}
-int test2(void){ // END THE GAME
-	printf("*************** test2 ******************\n");
-	printf("END THE GAME\n");
-	GAME = 0 ;
-	SETTINGS = 0;
-	return 1;
-}
-int test3(void){ //print settings
-	printf("*************** test3 ******************\n");
-	printf("print settings\n");
-	printf("MINIMAX_DEPTH = %d\n",MINIMAX_DEPTH);
-	printf("PLAYER_WHITE = %d\n",PLAYER_WHITE);
-	printf("WHITE_TURN = %d\n",WHITE_TURN);
-	return 1;
-}
-int test4(void){ //print all first turn moves + board
-	printf("*************** test4 ******************\n");
-	print_board(board);
-	printf("WHITE_TURN = %d\n",0);
-	move *moves = get_moves(board, 0);
-	printf("got moves! \n printing moves: \n");
-	fflush(stdout);
-	print_all_moves(moves);
-	//free_move(moves);
-	return 1;
-}
-int test5(void){ //print all moves(black) + board
-	printf("*************** test5 ******************\n");
-	char temp_board[BOARD_SIZE][BOARD_SIZE];
-	for (int i = 0; i < BOARD_SIZE; i++){
-		for ( int j = 0; j < BOARD_SIZE; j++){
-			temp_board[i][j] = EMPTY;
-		}
-	}
-	temp_board[6][0] = BLACK_K;
-	temp_board[9][1] = BLACK_M;
-	temp_board[8][2] = WHITE_M;
-	temp_board[8][4] = WHITE_M;
-	temp_board[8][6] = WHITE_M;
-	temp_board[8][8] = WHITE_M;
-	temp_board[6][6] = WHITE_M;
-	temp_board[4][4] = WHITE_M;
-	print_board(temp_board);
-	printf("WHITE_TURN = %d\n",0);
-	move *moves = get_moves(temp_board, 0);
-	printf("got moves! \n printing moves: \n");
-	fflush(stdout);
-	print_all_moves(moves);
-	printf("free moves: \n");
-	fflush(stdout);
-	free_move(moves);
-	printf("free is done! \n");
-	fflush(stdout);
-	return 1;
-}
-int test6(void){ //print all moves(black) + board
-	printf("*************** test6 ******************\n");
-	char temp_board[BOARD_SIZE][BOARD_SIZE];
-	for (int i = 0; i < BOARD_SIZE; i++){
-		for ( int j = 0; j < BOARD_SIZE; j++){
-			temp_board[i][j] = EMPTY;
-		}
-	}
-	//temp_board[6][0] = BLACK_K;
-	temp_board[9][1] = WHITE_M;
-	temp_board[8][2] = BLACK_M;
-	temp_board[8][4] = BLACK_M;
-	temp_board[8][6] = BLACK_M;
-	temp_board[8][8] = BLACK_M;
-	//temp_board[6][6] = BLACK_M;
-	temp_board[4][4] = BLACK_M;
-	print_board(temp_board);
-	printf("WHITE_TURN = %d\n",1);
-	move *moves = get_moves(temp_board, 1);
-	printf("got moves! \n printing moves: \n");
-	fflush(stdout);
-	print_all_moves(moves);
-	printf("do move: \n");
-	do_move(temp_board, moves);
-	print_board(temp_board);
-	printf("free moves: \n");
-	fflush(stdout);
-	free_move(moves);
-	printf("free is done! \n");
-	fflush(stdout);
-	return 1;
-}
-
 
 /** the main function. */
 int main(){

@@ -30,5 +30,33 @@ typedef char** board_t;
 
 void print_board(char board[BOARD_SIZE][BOARD_SIZE]);
 void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
+void set_minmax_depth(int x);
+void set_user_color(char *s);
+void quit(void);
+void clear(void);
+void remove_location(location l);
+int is_legal_location(location l);
+void set_location(location l, int white, int man);
+void quit_allcation_error(void);
+void start_game(void);
+char* read_input(void);
+void parse_input_settings(char* input);
+int check_settings(void);
+location str_to_location(char* locus);
+void declare_winner(void);
+int minmax(char a_board[BOARD_SIZE][BOARD_SIZE], int maxi, int depth);
+move* get_disc_moves(char a_board[BOARD_SIZE][BOARD_SIZE], location *l);
+move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn); 
+void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m);
+move *get_eating_moves(int row ,int column, char a_board[BOARD_SIZE][BOARD_SIZE]);
+move *get_move_minmax(void);
+move* link_moves(move *moves, move *disc_moves);
+int score_board(char a_board[BOARD_SIZE][BOARD_SIZE],int white_player);
+int same_color(char a, char b);
+void print_move(move *m);
+void print_all_moves(move *m);
+int is_legal_move(move* m);
+int parse_input_game(char* input); 
+ 
 
 #endif  
