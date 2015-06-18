@@ -33,14 +33,6 @@ int DEBUGGING2 = 0;
 
 // 																		*************** General methods ****************
 
-void quit(void){
-  exit(0);
-}
-void quit_allcation_error(void){
-	perror("Failed to allocate memory.");
-    exit(1);
-}
-
 /** create location. */
 location *create_location(int row, int column){
 	location *l;
@@ -86,6 +78,15 @@ void free_move(move *m){
 		free_location(m->step);
 		free(m);
 	}
+}
+
+void quit(void){
+  exit(0);
+}
+
+void quit_allcation_error(void){
+	perror("Failed to allocate memory.");
+    exit(1);
 } 
 
 //																		 *************** Board init & print methods ****************
@@ -256,6 +257,9 @@ char* read_input(void){
 			while( c == ' ' ){
 				c = getchar();
 			}
+			if ( c == '\n' ){
+				break;
+			}
 		}
 		input[i] = c;
 		i += 1;
@@ -264,7 +268,14 @@ char* read_input(void){
 		}
 		c = getchar();
 	}
+	if(i!=0 && input[i-1] == ' ' ){
+		if ((input = realloc(input, (i)*sizeof(char))) == NULL){
+			quit_allcation_error();
+		}
+		i--;
+	}
 	input[i] = '\0';
+
 	return input;
 }
 
@@ -285,7 +296,7 @@ void parse_input_settings(char* input){
 	// check if 'word' matches a legal (settings) command: 
 	if ( strcmp(word, "minimax_depth") == 0){
 		word = strtok(NULL, " ");
-		int x = atoi(word); //unsigned?????
+		int x = atoi(word);
 		set_minmax_depth(x);		
 	}
 	else if ( strcmp(word, "user_color") == 0){
@@ -388,7 +399,7 @@ location str_to_location(char* locus){
   * print out the winning message. */
 void declare_winner(void){
 	WHITE_TURN = (WHITE_TURN + 1)%2; // assumes the turn has already been updated, so adds 1 to get beck the last player.
-	char* winner = WHITE_TURN ? "white" : "black";
+	char* winner = WHITE_TURN ? "White" : "Black";
 	printf("%s player wins!\n", winner);
 }
 
@@ -421,8 +432,8 @@ move* get_moves(char a_board[BOARD_SIZE][BOARD_SIZE], int is_white_turn){
 					fflush(stdout);
 				}
 				moves = link_moves(moves,disc_moves); // concatenate the linked lists
-				free_location(l);//???
-				l = NULL;//??? 
+				free_location(l);
+				l = NULL;
 				
 			}
 		}
@@ -775,7 +786,7 @@ move* link_moves(move *moves, move *disc_moves){
 	
 	if ( temp->eats > moves->eats ) { // disc_moves is better, dump previous moves 
 		free_move(moves); 
-		moves = disc_moves; //???pointer still exists?....
+		moves = disc_moves; 
 		return moves;
 	}
 	// else: (sizes are equal)
@@ -869,7 +880,7 @@ void do_move(char a_board[BOARD_SIZE][BOARD_SIZE],move* m){
   * and turn skipping. the function receives the input char*
   * and assumes "game phase" type commands. */
 int parse_input_game(char* input){
-	//??? something??
+	
 	char *words; // will be a copy of the input.
 	char *word;
 	if((words = malloc((strlen(input)+1)*sizeof(*words))) == NULL){
@@ -892,7 +903,7 @@ int parse_input_game(char* input){
 				row = 0;
 				for ( int j = i+3 ; input[j] != '>' ; j++ ){ // calculate column value (could be '10')
 					row = 10 * row + (input[j] - '0');
-					i = j; //???
+					i = j; 
 				} 
 				l = create_location(row-1,column);
 				if ( user_move->step == NULL ){
@@ -944,7 +955,7 @@ int parse_input_game(char* input){
 		}
 		else{ // move is illegal
 			print_message(ILLEGAL_MOVE);
-			print_move(user_move); // ???
+			print_move(user_move); 
 			free_move(user_move);
 			return 1;			
 		}
